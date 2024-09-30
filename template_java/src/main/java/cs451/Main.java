@@ -58,6 +58,7 @@ public class Main {
 
         System.out.println("Broadcasting and delivering messages...\n");
 
+
         // After a process finishes broadcasting,
         // it waits forever for the delivery of messages.
         while (true) {
