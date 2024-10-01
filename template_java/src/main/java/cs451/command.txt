@@ -1,3 +1,4 @@
 /template_java$ ./build.sh
 
 /template_java$ ./run.sh --id 1 --hosts ./../example/hosts --output ./../example/output/FILENAME.output ./../example/configs/perfect-links.config
+
