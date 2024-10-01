@@ -24,9 +24,13 @@ public class Sender extends Host{
         try {
             DatagramSocket socket = new DatagramSocket();
             byte[] buffer = message.toString().getBytes();
-            InetAddress receiverAddress = InetAddress.getByName(getIp());
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, receiverAddress, getPort());
-            System.out.println("Sending message to " + receiver.getIp() + "/" + receiver.getPort());
+
+            InetAddress receiverAddress = InetAddress.getByName(receiver.getIp());
+            int receiverPort = receiver.getPort();
+
+
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, receiverAddress, receiverPort);
+            System.out.println("Sending message to " + receiverAddress + "/" + receiverPort);
             socket.send(packet);
             socket.close();
         } catch (Exception e) {

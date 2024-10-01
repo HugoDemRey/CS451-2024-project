@@ -11,4 +11,11 @@ public class Message {
     public int getSeqNumber() {
         return seqNumber;
     }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "seqNumber=" + seqNumber +
+                '}';
+    }
 }

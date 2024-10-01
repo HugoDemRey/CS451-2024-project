@@ -107,7 +107,9 @@ public class Main {
 
         switch (myRole) {
             case "Sender":
-                ((Sender) me).send(new Message(myId), receivers.get(0));
+                for (int i = 0; i < nbMessagesPerSender; i++) {
+                    ((Sender) me).send(new Message(myId), receivers.get(0));
+                }
                 break;
             case "Receiver":
                 ((Receiver) me).listen();

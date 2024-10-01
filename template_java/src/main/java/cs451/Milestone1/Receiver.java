@@ -2,6 +2,7 @@ package cs451.Milestone1;
 
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.InetAddress;
 import cs451.Host;
 
 public class Receiver extends Host {
@@ -13,17 +14,30 @@ public class Receiver extends Host {
     }
 
     public void listen() {
+        DatagramSocket socket = null;
         try {
-            DatagramSocket socket = new DatagramSocket(getPort());
+            socket = new DatagramSocket(getPort());
             byte[] buffer = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
-            socket.receive(packet);
-            String message = new String(packet.getData(), 0, packet.getLength());
-            System.out.println("Received: " + message);
-            socket.close();
+
+            while (true) {
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+
+                InetAddress senderAddress = packet.getAddress();
+                int senderPort = packet.getPort();
+
+                String message = new String(packet.getData(), 0, packet.getLength());
+                System.out.println("Received message from " + senderAddress + "/" + senderPort + ": " + message);
+
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+                System.out.println("Socket closed");
+            }
         }
     }
 
