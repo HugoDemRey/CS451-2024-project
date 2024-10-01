@@ -49,33 +49,41 @@ public class Main {
         // Implement the logic here from config file
         int nbMessagesPerSender = 10;
         int receiverId = 1;
+        int myId = parser.myId();
+
+        // We only keep a list of Hosts and not Senders or Receivers, our current host does not need to access functions, we just need data.
+        List<Host> receivers = new ArrayList<>();
+        List<Host> senders = new ArrayList<>();
+        Host me = null;
 
         
         List<Host> hosts = parser.hosts();
-        Receiver receiver = new Receiver(hosts.get(receiverId));
-        List<Sender> senders = new ArrayList<>();
         for (int i = 0; i < hosts.size(); i++) {
 
             Host host = hosts.get(i);
+            int hostId = host.getId();
 
-            if (receiverId == i) {
-                receiver = new Receiver(host);
-            } else {
-                senders.add(new Sender(host));
+            // Initializing me as a sender or receiver
+            if (hostId == myId) {
+                if (hostId == receiverId) {
+                    me = new Receiver();
+                    me.populate(host.getId() + "", host.getIp(), host.getPort() + "");
+                } else {
+                    me = new Sender();
+                    me.populate(host.getId() + "", host.getIp(), host.getPort() + "");
+                }
+                continue;
             }
+                
+            // Initializing receivers and senders
+            if (hostId == receiverId) receivers.add(host);
+            else senders.add(host);
 
             System.out.println(host.getId());
             System.out.println("Human-readable IP: " + host.getIp());
             System.out.println("Human-readable Port: " + host.getPort());
             System.out.println();
         }
-
-        System.out.println("Reveivers:");
-        System.out.println(receiver.host().getId() + " " + receiver.host().getIp() + " " + receiver.host().getPort());
-        System.out.println();
-        System.out.println("Senders: (" + senders.size() + ")");
-        System.out.println(senders);
-
 
         System.out.println();
 
@@ -88,10 +96,26 @@ public class Main {
         System.out.println(parser.config() + "\n");
 
         System.out.println("Doing some initialization\n");
+        System.out.println("me = " + me);
+        System.out.println("receivers = " + receivers);
+        System.out.println("senders = " + senders);
 
         System.out.println("Broadcasting and delivering messages...\n");
 
+
+        String myRole = me instanceof Sender ? "Sender" : "Receiver";
+
+        switch (myRole) {
+            case "Sender":
+                ((Sender) me).send(new Message(myId), receivers.get(0));
+                break;
+            case "Receiver":
+                ((Receiver) me).listen();
+                break;
         
+            default:
+                break;
+        }
 
         // After a process finishes broadcasting,
         // it waits forever for the delivery of messages.

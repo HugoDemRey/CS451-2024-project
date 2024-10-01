@@ -7,28 +7,39 @@ import java.net.InetAddress;
 import cs451.Host;
 
 
-public class Sender {
+public class Sender extends Host{
     private Host host;
 
-    public Sender(Host host) {
-        this.host = host;
+    @Override
+    public boolean populate(String idString, String ipString, String portString) {
+        boolean result = super.populate(idString, ipString, portString);
+        return result;
     }
 
     public Host host() {
         return host;
     }
 
-    public void send(Message message, Receiver receiver) {
+    public void send(Message message, Host receiver) {
         try {
             DatagramSocket socket = new DatagramSocket();
             byte[] buffer = message.toString().getBytes();
-            InetAddress receiverAddress = InetAddress.getByName(receiver.host().getIp());
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, receiverAddress, receiver.host().getPort());
-            System.out.println("Sending message to " + receiver.host().getIp() + ":" + receiver.host().getPort());
+            InetAddress receiverAddress = InetAddress.getByName(getIp());
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, receiverAddress, getPort());
+            System.out.println("Sending message to " + receiver.getIp() + "/" + receiver.getPort());
             socket.send(packet);
             socket.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Sender{" +
+                "id=" + getId() +
+                ", ip='" + getIp() + '\'' +
+                ", port=" + getPort() +
+                '}';
     }
 }
