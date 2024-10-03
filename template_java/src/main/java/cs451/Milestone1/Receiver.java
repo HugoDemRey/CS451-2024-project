@@ -28,6 +28,8 @@ public class Receiver extends Host {
                 int senderPort = packet.getPort();
 
                 String message = new String(packet.getData(), 0, packet.getLength());
+                write("d " + senderAddress + " " + message);
+                flushOutput();
                 System.out.println("Received message from " + senderAddress + "/" + senderPort + ": " + message);
 
             }

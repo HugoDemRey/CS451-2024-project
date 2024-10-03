@@ -32,6 +32,8 @@ public class Sender extends Host{
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, receiverAddress, receiverPort);
             System.out.println("Sending message to " + receiverAddress + "/" + receiverPort);
             socket.send(packet);
+            write("b " + message);
+            flushOutput();
             socket.close();
         } catch (Exception e) {
             e.printStackTrace();
