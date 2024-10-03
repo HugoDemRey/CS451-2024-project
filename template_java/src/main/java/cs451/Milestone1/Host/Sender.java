@@ -1,4 +1,4 @@
-package cs451.Milestone1;
+package cs451.Milestone1.Host;
 
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
@@ -6,15 +6,15 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
 import cs451.Host;
+import cs451.Milestone1.Message;
 
 
-public class Sender extends Host{
+public class Sender extends ActiveHost {
     private Host host;
 
     @Override
-    public boolean populate(String idString, String ipString, String portString) {
-        boolean result = super.populate(idString, ipString, portString);
-        initOutputWriter();
+    public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
+        boolean result = super.populate(idString, ipString, portString, outputFilePath);
         return result;
     }
 
@@ -25,7 +25,6 @@ public class Sender extends Host{
     public void send(Message message, Host receiver) {
         try {
             DatagramSocket socket = new DatagramSocket();
-            byte[] buffer = message.toString().getBytes();
 
             InetAddress receiverAddress = InetAddress.getByName(receiver.getIp());
             int receiverPort = receiver.getPort();
@@ -34,10 +33,9 @@ public class Sender extends Host{
             int senderId = message.getSenderId();
 
             // Convert seqNb and senderId to bytes and concatenate with the message bytes
-            ByteBuffer byteBuffer = ByteBuffer.allocate(4 + 4 + buffer.length);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(4 + 4);
             byteBuffer.putInt(seqNb);
             byteBuffer.putInt(senderId);
-            byteBuffer.put(buffer);
 
             byte[] packetData = byteBuffer.array();
             DatagramPacket packet = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);

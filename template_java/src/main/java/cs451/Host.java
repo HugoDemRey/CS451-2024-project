@@ -13,14 +13,10 @@ public class Host {
     private int id;
     private String ip;
     private int port = -1;
-    private OutputWriter outputWriter;
 
     public boolean populate(String idString, String ipString, String portString) {
         try {
             id = Integer.parseInt(idString);
-
-            outputWriter = new OutputWriter("./src/main/java/cs451/Milestone1/output", "output_" + id + ".out");
-
             String ipTest = InetAddress.getByName(ipString).toString();
             if (ipTest.startsWith(IP_START_REGEX)) {
                 ip = ipTest.substring(1);
@@ -60,25 +56,6 @@ public class Host {
         return port;
     }
 
-    public void initOutputWriter() {
-        try {
-            outputWriter.init();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void write(String line) {
-        outputWriter.addLine(line);
-    }
-
-    public void flushOutput() {
-        try {
-            outputWriter.flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public String toString() {

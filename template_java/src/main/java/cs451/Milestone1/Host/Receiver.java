@@ -1,16 +1,15 @@
-package cs451.Milestone1;
+package cs451.Milestone1.Host;
 
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 import cs451.Host;
 
-public class Receiver extends Host {
+public class Receiver extends ActiveHost {
 
     @Override
-    public boolean populate(String idString, String ipString, String portString) {
-        boolean result = super.populate(idString, ipString, portString);
-        initOutputWriter();
+    public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
+        boolean result = super.populate(idString, ipString, portString, outputFilePath);
         return result;
     }
 

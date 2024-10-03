@@ -11,16 +11,12 @@ import java.util.List;
 
 public class OutputWriter {
     private List<String> buffer;
-    private String parentDir;
-    private String fileName;
-    private String filePath;
+    private String outputFilePath;
     private final int MAX_BUFFER_SIZE = 100;
     private int bufferCount = 0;
 
-    public OutputWriter(String parentDir, String fileName) {
-        this.parentDir = parentDir;
-        this.fileName = fileName;
-        this.filePath = parentDir + "/" + fileName;
+    public OutputWriter(String outputFilePath) {
+        this.outputFilePath = outputFilePath;
         this.buffer = new ArrayList<>();
     }
 
@@ -48,7 +44,7 @@ public class OutputWriter {
 
     public void init() throws IOException {
         try {
-            createOrClearFile(filePath);
+            createOrClearFile(outputFilePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -67,7 +63,7 @@ public class OutputWriter {
     }
 
     private void writeToFile() throws IOException {
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath), StandardOpenOption.APPEND)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath), StandardOpenOption.APPEND)) {
             for (String line : buffer) {
                 writer.write(line);
                 writer.newLine();

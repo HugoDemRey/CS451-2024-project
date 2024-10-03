@@ -3,13 +3,14 @@ package cs451;
 import java.util.ArrayList;
 import java.util.List;
 
-import cs451.Milestone1.Sender;
 import cs451.Milestone1.Message;
-import cs451.Milestone1.Receiver;
+import cs451.Milestone1.Host.ActiveHost;
+import cs451.Milestone1.Host.Receiver;
+import cs451.Milestone1.Host.Sender;
 
 public class Main {
 
-    static Host me;
+    static ActiveHost me;
 
     private static void handleSignal() {
         //immediately stop network packet processing
@@ -65,10 +66,10 @@ public class Main {
             if (hostId == myId) {
                 if (hostId == receiverId) {
                     me = new Receiver();
-                    me.populate(host.getId() + "", host.getIp(), host.getPort() + "");
+                    me.populate(host.getId() + "", host.getIp(), host.getPort() + "", parser.output());
                 } else {
                     me = new Sender();
-                    me.populate(host.getId() + "", host.getIp(), host.getPort() + "");
+                    me.populate(host.getId() + "", host.getIp(), host.getPort() + "", parser.output());
                 }
                 continue;
             }
