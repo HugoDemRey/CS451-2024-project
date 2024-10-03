@@ -3,7 +3,6 @@ package cs451.Milestone1.Host;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
-import cs451.Host;
 
 public class Receiver extends ActiveHost {
 
