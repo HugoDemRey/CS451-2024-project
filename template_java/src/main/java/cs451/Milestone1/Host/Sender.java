@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import cs451.Constants;
 import cs451.Host;
@@ -63,7 +64,11 @@ public class Sender extends ActiveHost {
             int senderId = message.getSenderId();
 
             // Computing the size to allocate for the packet
-            int contentSizeBytes = content.length() * Character.BYTES;
+            byte[] contentBytes = content.getBytes(StandardCharsets.UTF_8);
+            // TODO: Ask if the CHAR_SIZE = 1 for UTF_8
+            int contentSizeBytes = content.length();
+
+            // Computing the size of the packet
             int allocatedBytes = Integer.BYTES + contentSizeBytes + Integer.BYTES;
 
             // Allocating the packet
@@ -72,7 +77,7 @@ public class Sender extends ActiveHost {
             // We store the length of the content in the first 4 bytes, 
             // to allow multiple messages to be sent in one packet
             byteBuffer.putInt(contentSizeBytes);
-            byteBuffer.put(content.getBytes());
+            byteBuffer.put(contentBytes);
             byteBuffer.putInt(senderId);
 
             byte[] packetData = byteBuffer.array();

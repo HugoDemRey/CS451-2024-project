@@ -3,6 +3,7 @@ package cs451.Milestone1.Host;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -78,12 +79,13 @@ public class Receiver extends ActiveHost {
                 // Unpack the content
                 byte[] contentBytes = new byte[contentSizeBytes];
                 byteBuffer.get(contentBytes);
-                String content = new String(contentBytes);
+                String content = new String(contentBytes, StandardCharsets.UTF_8);
 
                 // Unpack the senderId
                 int senderId = byteBuffer.getInt();
 
                 String toWrite = "d " + senderId + " " + content;
+                
                 // Check if message has already been delivered
                 System.out.println(delivered.contains(toWrite));
                 if (delivered.contains(toWrite)) {
