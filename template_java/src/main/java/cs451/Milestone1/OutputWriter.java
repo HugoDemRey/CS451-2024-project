@@ -12,7 +12,7 @@ import java.util.List;
 public class OutputWriter {
     private List<String> buffer;
     private String outputFilePath;
-    private final int MAX_BUFFER_SIZE = 100;
+    private final int MAX_BUFFER_SIZE = 10;
     private int bufferCount = 0;
 
     public OutputWriter(String outputFilePath) {

@@ -3,9 +3,13 @@ package cs451.Milestone1.Host;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
+import java.util.HashSet;
+import java.util.Set;
 
-import cs451.Milestone1.ReliableNetwork.PerfectLinks;
 import cs451.Milestone1.Message;
+
+import static cs451.Constants.*;
+
 
 public class Receiver extends ActiveHost {
 
@@ -47,8 +51,57 @@ public class Receiver extends ActiveHost {
     }
 
     public void listenWithPerfectLinks(){
-        Message message = PerfectLinks.receive(getPort());
-        System.out.println("PL: Received message from " + message.getSenderId() + "/" + message.getSeqNumber());
+        DatagramSocket socket = null;
+        Set<String> delivered = new HashSet<>();
+        try {
+            socket = new DatagramSocket(getPort());
+
+            while (true) {
+                byte[] receiveData = new byte[STANDARD_MESSAGE_SIZE_BYTES];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                socket.receive(receivePacket);
+
+                
+                // Send acknowledgment
+                String ackMessage = ACK;
+                byte[] ackData = ackMessage.getBytes();
+                DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, receivePacket.getAddress(), receivePacket.getPort());
+                socket.send(ackPacket);
+
+
+                // Deserialize message
+                ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData(), 0, receivePacket.getLength());
+                
+                // Unpack the size in bytes of the content
+                int contentSizeBytes = byteBuffer.getInt();
+
+                // Unpack the content
+                byte[] contentBytes = new byte[contentSizeBytes];
+                byteBuffer.get(contentBytes);
+                String content = new String(contentBytes);
+
+                // Unpack the senderId
+                int senderId = byteBuffer.getInt();
+
+                String toWrite = "d " + senderId + " " + content;
+                // Check if message has already been delivered
+                System.out.println(delivered.contains(toWrite));
+                if (delivered.contains(toWrite)) {
+                    System.out.println("Already delivered: " + toWrite);
+                    continue;
+                }
+
+                // Deliver the message if it hasn't been delivered yet
+                delivered.add(toWrite);
+                write("d " + senderId + " " + content);
+                System.out.println("Delivering: " + toWrite);
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            socket.close();
+        }
     }
 
     @Override

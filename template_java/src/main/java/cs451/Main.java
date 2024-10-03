@@ -47,7 +47,7 @@ public class Main {
 
         
         // Implement the logic here from config file
-        int nbMessagesPerSender = 10;
+        int nbMessagesPerSender = 100;
         int receiverId = 1;
         int myId = parser.myId();
 
@@ -107,7 +107,9 @@ public class Main {
         switch (myRole) {
             case "Sender":
                 for (int i = 0; i < nbMessagesPerSender; i++) {
-                    ((Sender) me).sendWithPerfectLinks(new Message(myId, i+1), receivers.get(0));
+                    String content = i + "";
+                    System.out.println("Sending message: " + content);
+                    ((Sender) me).sendWithPerfectLinks(new Message(myId, content), receivers.get(0));
                 }
                 break;
             case "Receiver":
