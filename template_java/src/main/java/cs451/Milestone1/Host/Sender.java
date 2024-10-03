@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 
 import cs451.Host;
 import cs451.Milestone1.Message;
+import cs451.Milestone1.ReliableNetwork.PerfectLinks;
 
 
 public class Sender extends ActiveHost {
@@ -46,6 +47,10 @@ public class Sender extends ActiveHost {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void sendWithPerfectLinks(Message message, Host receiver){
+        PerfectLinks.send(receiver.getIp(), receiver.getPort(), message);
     }
 
     @Override

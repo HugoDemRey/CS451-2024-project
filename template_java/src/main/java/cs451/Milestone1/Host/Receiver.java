@@ -4,6 +4,9 @@ import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 
+import cs451.Milestone1.ReliableNetwork.PerfectLinks;
+import cs451.Milestone1.Message;
+
 public class Receiver extends ActiveHost {
 
     @Override
@@ -41,6 +44,11 @@ public class Receiver extends ActiveHost {
                 System.out.println("Socket closed");
             }
         }
+    }
+
+    public void listenWithPerfectLinks(){
+        Message message = PerfectLinks.receive(getPort());
+        System.out.println("PL: Received message from " + message.getSenderId() + "/" + message.getSeqNumber());
     }
 
     @Override

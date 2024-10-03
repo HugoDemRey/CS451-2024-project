@@ -7,8 +7,12 @@ import java.nio.ByteBuffer;
 
 import cs451.Milestone1.Message;
 
+
 public class PerfectLinks {
 
+
+    public static final int STANDARD_MESSAGE_SIZE_BYTES = 1024;
+    public static final String ACK = "ACK";
     private static final int TIMEOUT = 1000; // Timeout in milliseconds
     private static final int MAX_RETRIES = 5; // Maximum number of retries
 
@@ -36,15 +40,16 @@ public class PerfectLinks {
                 socket.send(sendPacket);
 
                 try {
-                    byte[] ackData = new byte[1024];
+                    byte[] ackData = new byte[STANDARD_MESSAGE_SIZE_BYTES];
                     DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
                     socket.receive(ackPacket);
 
                     String ackMessage = new String(ackPacket.getData(), 0, ackPacket.getLength());
-                    if (ackMessage.equals("ACK")) {
+                    if (ackMessage.equals(ACK)) {
                         acknowledged = true;
                     }
                 } catch (SocketTimeoutException e) {
+                    System.out.println("Timeout reached, " + (MAX_RETRIES - attempts) + " attempts left");
                     attempts++;
                 }
             }
@@ -61,13 +66,14 @@ public class PerfectLinks {
         return tryToSend(destIp, portNb, message);
     }
 
-    public static void receive(int portNb) {
+    public static Message receive(int portNb) {
         DatagramSocket socket = null;
+        Message message = null;
         try {
             socket = new DatagramSocket(portNb);
 
             while (true) {
-                byte[] receiveData = new byte[1024];
+                byte[] receiveData = new byte[STANDARD_MESSAGE_SIZE_BYTES];
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(receivePacket);
 
@@ -75,7 +81,7 @@ public class PerfectLinks {
                 System.out.println("Received: " + receivedMessage);
 
                 // Send acknowledgment
-                String ackMessage = "ACK";
+                String ackMessage = ACK;
                 byte[] ackData = ackMessage.getBytes();
                 DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, receivePacket.getAddress(), receivePacket.getPort());
                 socket.send(ackPacket);
@@ -85,5 +91,6 @@ public class PerfectLinks {
         } finally {
             socket.close();
         }
+        return message;
     }
 }

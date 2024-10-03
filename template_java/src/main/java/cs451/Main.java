@@ -107,11 +107,11 @@ public class Main {
         switch (myRole) {
             case "Sender":
                 for (int i = 0; i < nbMessagesPerSender; i++) {
-                    ((Sender) me).send(new Message(myId, i+1), receivers.get(0));
+                    ((Sender) me).sendWithPerfectLinks(new Message(myId, i+1), receivers.get(0));
                 }
                 break;
             case "Receiver":
-                ((Receiver) me).listen();
+                ((Receiver) me).listenWithPerfectLinks();
                 break;
         
             default:
