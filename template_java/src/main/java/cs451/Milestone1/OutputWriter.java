@@ -22,11 +22,6 @@ public class OutputWriter {
         this.fileName = fileName;
         this.filePath = parentDir + "/" + fileName;
         this.buffer = new ArrayList<>();
-        try {
-            createOrClearFile(filePath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -49,6 +44,14 @@ public class OutputWriter {
      */
     public void flush() throws IOException {
         writeToFile();
+    }
+
+    public void init() throws IOException {
+        try {
+            createOrClearFile(filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     private void createOrClearFile(String filePath) throws IOException {

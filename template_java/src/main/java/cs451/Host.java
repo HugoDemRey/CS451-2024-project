@@ -60,6 +60,14 @@ public class Host {
         return port;
     }
 
+    public void initOutputWriter() {
+        try {
+            outputWriter.init();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void write(String line) {
         outputWriter.addLine(line);
     }

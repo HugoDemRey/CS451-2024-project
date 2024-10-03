@@ -10,6 +10,7 @@ public class Receiver extends Host {
     @Override
     public boolean populate(String idString, String ipString, String portString) {
         boolean result = super.populate(idString, ipString, portString);
+        initOutputWriter();
         return result;
     }
 
