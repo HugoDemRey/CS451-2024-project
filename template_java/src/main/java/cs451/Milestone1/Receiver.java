@@ -2,7 +2,7 @@ package cs451.Milestone1;
 
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
-import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import cs451.Host;
 
 public class Receiver extends Host {
@@ -25,13 +25,14 @@ public class Receiver extends Host {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
-                InetAddress senderAddress = packet.getAddress();
-                int senderPort = packet.getPort();
+                ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData());
+                int seqNb = byteBuffer.getInt();
+                int senderId = byteBuffer.getInt();
+                byte[] dataBytes = new byte[packet.getLength() - 8];
+                byteBuffer.get(dataBytes);
 
-                String message = new String(packet.getData(), 0, packet.getLength());
-                write("d " + senderAddress + " " + message);
-                flushOutput();
-                System.out.println("Received message from " + senderAddress + "/" + senderPort + ": " + message);
+                write("d " + senderId + " " + seqNb);
+                System.out.println("Received message from " + senderId + "/" + seqNb);
 
             }
         } catch (Exception e) {

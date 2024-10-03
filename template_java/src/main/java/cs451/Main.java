@@ -1,9 +1,5 @@
 package cs451;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +9,14 @@ import cs451.Milestone1.Receiver;
 
 public class Main {
 
+    static Host me;
+
     private static void handleSignal() {
         //immediately stop network packet processing
         System.out.println("Immediately stopping network packet processing.");
 
         //write/flush output file if necessary
+        me.flushOutput();
         System.out.println("Writing output.");
     }
 
@@ -54,7 +53,6 @@ public class Main {
         // We only keep a list of Hosts and not Senders or Receivers, our current host does not need to access functions, we just need data.
         List<Host> receivers = new ArrayList<>();
         List<Host> senders = new ArrayList<>();
-        Host me = null;
 
         
         List<Host> hosts = parser.hosts();
@@ -108,7 +106,7 @@ public class Main {
         switch (myRole) {
             case "Sender":
                 for (int i = 0; i < nbMessagesPerSender; i++) {
-                    ((Sender) me).send(new Message(myId), receivers.get(0));
+                    ((Sender) me).send(new Message(myId, i+1), receivers.get(0));
                 }
                 break;
             case "Receiver":
