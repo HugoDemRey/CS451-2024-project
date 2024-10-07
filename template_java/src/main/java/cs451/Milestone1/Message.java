@@ -1,5 +1,6 @@
 package cs451.Milestone1;
 
+import java.nio.charset.StandardCharsets;
 
 public class Message {
     private int senderId;
