@@ -1,56 +1,40 @@
 package cs451.Milestone1;
 
-import java.nio.charset.StandardCharsets;
-
 public class Message {
+    private int seqNum;
     private int senderId;
     private String content;
-    private int seqNum;
 
+    // Constructors
+    public Message() {}
 
-    public Message(int senderId, String content, int seqNum) {
+    public Message(int senderId, String content) {
         this.senderId = senderId;
         this.content = content;
-        this.seqNum = 0;
+    }
+
+    // Getters and Setters
+    public int getSeqNum() {
+        return seqNum;
+    }
+
+    public void setSeqNum(int seqNum) {
+        this.seqNum = seqNum;
+    }
+
+    public int getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(int senderId) {
+        this.senderId = senderId;
     }
 
     public String getContent() {
         return content;
     }
 
-    public int getSenderId(){
-        return senderId;
-    }
-
-    public int getSeqNum(){
-        return seqNum;
-    }
-
-    public void setSeqNum(int seqNumber){
-        this.seqNum = seqNumber;
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "senderId=" + senderId +
-                "seqNumber=" + content +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        // if (obj == null) {
-        //     return false;
-        // }
-        // if (obj == this) {
-        //     return true;
-        // }
-        // if (obj.getClass() != getClass()) {
-        //     return false;
-        // }
-        Message other = (Message) obj;
-        System.out.println("");
-        return this.senderId == other.senderId && this.content == other.content;
+    public void setContent(String content) {
+        this.content = content;
     }
 }
