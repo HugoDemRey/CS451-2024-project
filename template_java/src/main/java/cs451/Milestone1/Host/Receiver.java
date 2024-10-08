@@ -6,19 +6,17 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import cs451.Milestone1.Message;
 
 import static cs451.Constants.*;
 
 public class Receiver extends ActiveHost {
-    // Map to keep track of expected sequence numbers per sender if in-order delivery is desired
-    // For out-of-order delivery, this can be omitted or used for tracking purposes
-    private final Map<Integer, Integer> expectedSeqNums = new ConcurrentHashMap<>();
-
-    // To store out-of-order messages if needed for future in-order delivery
-    // private final Map<Integer, Map<Integer, Message>> receivedMessages = new ConcurrentHashMap<>();
+    // Map to keep track of delivered sequence numbers per sender
+    private final Map<Integer, Set<Integer>> deliveredSeqNums = new ConcurrentHashMap<>();
 
     @Override
     public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
@@ -52,11 +50,23 @@ public class Receiver extends ActiveHost {
                 String toWrite = "d " + senderId + " " + content;
                 System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
 
-                // Deliver the message immediately (out-of-order)
-                write(toWrite);
-                System.out.println("Delivered message SeqNum " + seqNb + " from Sender " + senderId);
+                // Initialize the set for the sender if not present
+                deliveredSeqNums.computeIfAbsent(senderId, k -> new ConcurrentSkipListSet<>());
 
-                // Send individual ACK
+                // Check if the message has already been delivered
+                Set<Integer> senderDelivered = deliveredSeqNums.get(senderId);
+                if (!senderDelivered.contains(seqNb)) {
+                    // Deliver the message
+                    write(toWrite);
+                    System.out.println("Delivered message SeqNum " + seqNb + " from Sender " + senderId);
+                    // Mark the sequence number as delivered
+                    senderDelivered.add(seqNb);
+                } else {
+                    // Duplicate message received; do not deliver again
+                    System.out.println("Duplicate message SeqNum " + seqNb + " from Sender " + senderId + " ignored for delivery.");
+                }
+
+                // Send individual ACK regardless of duplication
                 sendAck(socket, packet.getAddress(), packet.getPort(), senderId, seqNb);
             }
         } catch (Exception e) {
