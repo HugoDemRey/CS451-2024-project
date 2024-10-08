@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.BlockingQueue;
+import cs451.Milestone1.MessageReceiverPair;
 
 import cs451.Constants;
 import cs451.Host;
@@ -37,7 +39,6 @@ public class Sender extends ActiveHost {
         boolean result = super.populate(idString, ipString, portString, outputFilePath);
         try {
             socket = new DatagramSocket();
-            socket.setSoTimeout(TIMEOUT);
             // Start the consumer thread for sending messages
             executor.execute(this::processQueue);
             // Start the listener thread for receiving ACKs
@@ -150,6 +151,7 @@ public class Sender extends ActiveHost {
                         for (int seq = base.get(); seq <= ackSeqNum; seq++) {
                             window.remove(seq);
                             // Cancel the timer
+                            System.out.println("Cancelling timer for SeqNum " + seq);
                             ScheduledFuture<?> timer = timers.remove(seq);
                             if (timer != null) {
                                 timer.cancel(false);
@@ -171,6 +173,7 @@ public class Sender extends ActiveHost {
      * @param seqNum The sequence number of the packet.
      */
     private void startTimer(int seqNum) {
+        System.out.println("Starting timer for SeqNum " + seqNum);
         ScheduledFuture<?> timer = scheduler.schedule(() -> {
             try {
                 synchronized (Sender.this) {

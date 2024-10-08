@@ -1,4 +1,6 @@
-package cs451.Milestone1.Host;
+package cs451.Milestone1;
+
+import cs451.Host;
 
 public class MessageReceiverPair {
     private final Message message;

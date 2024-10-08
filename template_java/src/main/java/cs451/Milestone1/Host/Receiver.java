@@ -46,26 +46,26 @@ public class Receiver extends ActiveHost {
                 int senderId = byteBuffer.getInt();
 
                 String toWrite = "d " + senderId + " " + content;
-                System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
+                System.out.println("RECEIVED SEQNUM" + seqNb);
+                write(toWrite);
+                sendAck(socket, packet.getAddress(), packet.getPort(), senderId, seqNb);
+                //System.out.println("Received & Delivered message SeqNum " + seqNb + " from Sender " + senderId);
 
                 // Get the expected sequence number for this sender
-                int expectedSeqNum = expectedSeqNums.getOrDefault(senderId, 0);
+                // int expectedSeqNum = expectedSeqNums.getOrDefault(senderId, 0);
 
-                if (seqNb == expectedSeqNum) {
-                    // Deliver the data
-                    write(toWrite);
-                    System.out.println("Delivered message SeqNum " + seqNb + " from Sender " + senderId);
-                    expectedSeqNum++;
-                    expectedSeqNums.put(senderId, expectedSeqNum);
+                // if (seqNb == expectedSeqNum) {
+                //     // Deliver the data
+                //     expectedSeqNum++;
+                //     expectedSeqNums.put(senderId, expectedSeqNum);
 
-                    // Send cumulative ACK
-                    sendAck(socket, packet.getAddress(), packet.getPort(), senderId, seqNb);
-                } else {
-                    // Duplicate or out-of-order packet, resend ACK for last in-order
-                    int lastAck = expectedSeqNum - 1;
-                    sendAck(socket, packet.getAddress(), packet.getPort(), senderId, lastAck);
-                    System.out.println("Received out-of-order SeqNum " + seqNb + " from Sender " + senderId + ", expected " + expectedSeqNum);
-                }
+                //     // Send cumulative ACK
+                // } else {
+                //     // Duplicate or out-of-order packet, resend ACK for last in-order
+                //     int lastAck = expectedSeqNum - 1;
+                //     sendAck(socket, packet.getAddress(), packet.getPort(), senderId, lastAck);
+                //     System.out.println("Received out-of-order SeqNum " + seqNb + " from Sender " + senderId + ", expected " + expectedSeqNum);
+                // }
             }
         } catch (Exception e) {
             e.printStackTrace();
