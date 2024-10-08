@@ -3,12 +3,11 @@ package cs451.Milestone1.Host;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import cs451.Constants;
 import cs451.Host;
@@ -17,18 +16,21 @@ import cs451.Milestone1.Message;
 import static cs451.Constants.*;
 
 public class Sender extends ActiveHost {
-    private Host host;
     private DatagramSocket socket;
-    private InetAddress receiverAddress;
-    private int receiverPort;
+    private final BlockingQueue<MessageReceiverPair> messageQueue = new LinkedBlockingQueue<>();
+    private final ExecutorService executor = Executors.newFixedThreadPool(2); // One for sending, one for ACKs
 
     // Sliding window variables
-    private static final int WINDOW_SIZE = 5;
-    private int base = 0;
-    private int nextSeqNum = 0;
-    private Map<Integer, Message> window = new ConcurrentHashMap<>();
-    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private Map<Integer, ScheduledFuture<?>> timers = new ConcurrentHashMap<>();
+    private static final int WINDOW_SIZE = 5; // Example window size
+    private final AtomicInteger base = new AtomicInteger(0); // The sequence number of the oldest unacknowledged packet
+    private final AtomicInteger nextSeqNum = new AtomicInteger(0); // The next sequence number to be used
+    private final Map<Integer, MessageReceiverPair> window = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final Map<Integer, ScheduledFuture<?>> timers = new ConcurrentHashMap<>();
+
+    public Sender() {
+        // Initialize any necessary components
+    }
 
     @Override
     public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
@@ -36,8 +38,10 @@ public class Sender extends ActiveHost {
         try {
             socket = new DatagramSocket();
             socket.setSoTimeout(TIMEOUT);
-            // Initialize receiverAddress and receiverPort appropriately
-            // For example, set them via additional parameters or configuration
+            // Start the consumer thread for sending messages
+            executor.execute(this::processQueue);
+            // Start the listener thread for receiving ACKs
+            executor.execute(this::listenForAcks);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -45,114 +49,135 @@ public class Sender extends ActiveHost {
         return result;
     }
 
-    public Host host() {
-        return host;
+    /**
+     * Adds a message and its receiver to the sending queue.
+     *
+     * @param message  The message to send.
+     * @param receiver The intended receiver of the message.
+     */
+    public void enqueueMessage(Message message, Host receiver) {
+        try {
+            messageQueue.put(new MessageReceiverPair(message, receiver));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Interrupted while enqueueing message: " + e.getMessage());
+        }
     }
 
-    public void sendSlidingWindow(List<Message> messages, Host receiver) {
+    /**
+     * Continuously processes the message queue, sending messages according to the sliding window protocol.
+     */
+    private void processQueue() {
         try {
-            receiverAddress = InetAddress.getByName(receiver.getIp());
-            receiverPort = receiver.getPort();
+            while (true) {
+                MessageReceiverPair pair = messageQueue.take(); // Blocks if queue is empty
+                Host receiver = pair.getReceiver();
+                Message message = pair.getMessage();
 
-            // Start a thread to listen for ACKs
-            new Thread(this::listenForAcks).start();
-
-            // Iterate through the messages and send them according to window size
-            for (Message message : messages) {
                 synchronized (this) {
-                    while (nextSeqNum >= base + WINDOW_SIZE) {
+                    while (nextSeqNum.get() >= base.get() + WINDOW_SIZE) {
                         // Wait until there is space in the window
                         wait();
                     }
 
                     // Assign sequence number and send the packet
-                    message.setSeqNum(nextSeqNum);
-                    sendPacket(message);
-                    window.put(nextSeqNum, message);
+                    int seqNum = nextSeqNum.getAndIncrement();
+                    message.setSeqNum(seqNum);
+                    window.put(seqNum, pair);
+                    sendPacket(message, receiver);
 
                     // Start timer for the packet
-                    startTimer(nextSeqNum);
-
-                    nextSeqNum++;
+                    startTimer(seqNum);
                 }
             }
-
-            // Wait until all packets are acknowledged
-            synchronized (this) {
-                while (base < nextSeqNum) {
-                    wait();
-                }
-            }
-
-            // Shutdown scheduler
-            scheduler.shutdown();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            socket.close();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Sender queue processing interrupted: " + e.getMessage());
         }
     }
 
-    private void sendPacket(Message message) throws Exception {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(4 + message.getContent().getBytes(StandardCharsets.UTF_8).length + 4);
-        byteBuffer.putInt(message.getSeqNum()); // Sequence number
-        byteBuffer.put(message.getContent().getBytes(StandardCharsets.UTF_8));
-        byteBuffer.putInt(message.getSenderId());
+    /**
+     * Sends a packet containing the message to the specified receiver.
+     *
+     * @param message  The message to send.
+     * @param receiver The intended receiver.
+     */
+    private void sendPacket(Message message, Host receiver) {
+        try {
+            InetAddress receiverAddress = InetAddress.getByName(receiver.getIp());
+            int receiverPort = receiver.getPort();
 
-        byte[] packetData = byteBuffer.array();
-        DatagramPacket packet = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
-        socket.send(packet);
-        write("b " + message.getContent());
-        System.out.println("Sent message with SeqNum " + message.getSeqNum());
+            byte[] contentBytes = message.getContent().getBytes(StandardCharsets.UTF_8);
+            int contentSizeBytes = contentBytes.length;
+
+            // Allocate bytes: [seqNum (4)] + [content size (4)] + [content] + [senderId (4)]
+            ByteBuffer byteBuffer = ByteBuffer.allocate(4 + 4 + contentSizeBytes + 4);
+            byteBuffer.putInt(message.getSeqNum());
+            byteBuffer.putInt(contentSizeBytes);
+            byteBuffer.put(contentBytes);
+            byteBuffer.putInt(message.getSenderId());
+
+            byte[] packetData = byteBuffer.array();
+            DatagramPacket packet = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
+            socket.send(packet);
+            write("b " + message.getContent());
+            System.out.println("Sent message with SeqNum " + message.getSeqNum() + " to " + receiver.getIp() + "/" + receiverPort);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
+    /**
+     * Listens for ACKs from receivers and updates the sliding window accordingly.
+     */
     private void listenForAcks() {
         try {
-            byte[] ackData = new byte[4]; // Assuming ACK contains only the sequence number
-            DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
-
             while (true) {
+                byte[] ackData = new byte[8]; // [senderId (4)] + [ackSeqNum (4)]
+                DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
                 socket.receive(ackPacket);
+
                 ByteBuffer byteBuffer = ByteBuffer.wrap(ackPacket.getData(), 0, ackPacket.getLength());
+                int ackSenderId = byteBuffer.getInt();
                 int ackSeqNum = byteBuffer.getInt();
-                System.out.println("Received ACK for SeqNum " + ackSeqNum);
+
+                System.out.println("Received ACK for Sender " + ackSenderId + " SeqNum " + ackSeqNum);
 
                 synchronized (this) {
-                    if (ackSeqNum >= base) {
+                    // Assuming single sender, or ACKs are only for this sender's messages
+                    if (ackSeqNum >= base.get()) {
                         // Slide the window
-                        for (int seq = base; seq <= ackSeqNum; seq++) {
+                        for (int seq = base.get(); seq <= ackSeqNum; seq++) {
                             window.remove(seq);
                             // Cancel the timer
-                            ScheduledFuture<?> timer = timers.get(seq);
+                            ScheduledFuture<?> timer = timers.remove(seq);
                             if (timer != null) {
                                 timer.cancel(false);
-                                timers.remove(seq);
                             }
                         }
-                        base = ackSeqNum + 1;
+                        base.set(ackSeqNum + 1);
                         notifyAll(); // Notify sender to send more packets
                     }
                 }
-
-                if (base == nextSeqNum) {
-                    break; // All packets are acknowledged
-                }
             }
-        } catch (SocketTimeoutException e) {
-            // Handle timeout if necessary
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Starts a timer for the given sequence number. If the timer expires, the packet is retransmitted.
+     *
+     * @param seqNum The sequence number of the packet.
+     */
     private void startTimer(int seqNum) {
         ScheduledFuture<?> timer = scheduler.schedule(() -> {
             try {
                 synchronized (Sender.this) {
-                    if (window.containsKey(seqNum)) {
+                    MessageReceiverPair pair = window.get(seqNum);
+                    if (pair != null) {
                         System.out.println("Timeout for SeqNum " + seqNum + ", retransmitting...");
-                        sendPacket(window.get(seqNum));
+                        sendPacket(pair.getMessage(), pair.getReceiver());
                         startTimer(seqNum); // Restart the timer
                     }
                 }
@@ -162,6 +187,22 @@ public class Sender extends ActiveHost {
         }, TIMEOUT, TimeUnit.MILLISECONDS);
 
         timers.put(seqNum, timer);
+    }
+
+    /**
+     * Gracefully shuts down the sender, closing sockets and executors.
+     */
+    public void shutdown() {
+        try {
+            executor.shutdownNow();
+            scheduler.shutdownNow();
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+            System.out.println("Sender shutdown complete.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
