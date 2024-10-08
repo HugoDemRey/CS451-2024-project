@@ -11,8 +11,8 @@ import cs451.Milestone1.Message;
 
 import static cs451.Constants.*;
 
-
 public class Receiver extends ActiveHost {
+    private int expectedSeqNum = 0;
 
     @Override
     public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
@@ -20,7 +20,7 @@ public class Receiver extends ActiveHost {
         return result;
     }
 
-    public void listen() {
+    public void listenWithSlidingWindow() {
         DatagramSocket socket = null;
         try {
             socket = new DatagramSocket(getPort());
@@ -31,15 +31,26 @@ public class Receiver extends ActiveHost {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
-                ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData());
+                ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData(), 0, packet.getLength());
                 int seqNb = byteBuffer.getInt();
                 int senderId = byteBuffer.getInt();
                 byte[] dataBytes = new byte[packet.getLength() - 8];
                 byteBuffer.get(dataBytes);
+                String content = new String(dataBytes, StandardCharsets.UTF_8);
 
-                write("d " + senderId + " " + seqNb);
-                System.out.println("Received message from " + senderId + "/" + seqNb);
+                if (seqNb == expectedSeqNum) {
+                    // Deliver the data
+                    write("d " + senderId + " " + content);
+                    System.out.println("Delivered message SeqNum " + seqNb);
+                    expectedSeqNum++;
 
+                    // Send cumulative ACK
+                    sendAck(socket, packet.getAddress(), packet.getPort(), seqNb);
+                } else {
+                    // Duplicate or out-of-order packet, resend ACK for last in-order
+                    sendAck(socket, packet.getAddress(), packet.getPort(), expectedSeqNum - 1);
+                    System.out.println("Received out-of-order SeqNum " + seqNb + ", expected " + expectedSeqNum);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,59 +62,13 @@ public class Receiver extends ActiveHost {
         }
     }
 
-    public void listenWithPerfectLinks(){
-        DatagramSocket socket = null;
-        Set<String> delivered = new HashSet<>();
-        try {
-            socket = new DatagramSocket(getPort());
-
-            while (true) {
-                byte[] receiveData = new byte[STANDARD_MESSAGE_SIZE_BYTES];
-                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                socket.receive(receivePacket);
-
-                
-                // Send acknowledgment
-                String ackMessage = ACK;
-                byte[] ackData = ackMessage.getBytes();
-                DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, receivePacket.getAddress(), receivePacket.getPort());
-                socket.send(ackPacket);
-
-
-                // Deserialize message
-                ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData(), 0, receivePacket.getLength());
-                
-                // Unpack the size in bytes of the content
-                int contentSizeBytes = byteBuffer.getInt();
-
-                // Unpack the content
-                byte[] contentBytes = new byte[contentSizeBytes];
-                byteBuffer.get(contentBytes);
-                String content = new String(contentBytes, StandardCharsets.UTF_8);
-
-                // Unpack the senderId
-                int senderId = byteBuffer.getInt();
-
-                String toWrite = "d " + senderId + " " + content;
-                
-                // Check if message has already been delivered
-                System.out.println(delivered.contains(toWrite));
-                if (delivered.contains(toWrite)) {
-                    System.out.println("Already delivered: " + toWrite);
-                    continue;
-                }
-
-                // Deliver the message if it hasn't been delivered yet
-                delivered.add(toWrite);
-                write("d " + senderId + " " + content);
-                System.out.println("Delivering: " + toWrite);
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            socket.close();
-        }
+    private void sendAck(DatagramSocket socket, InetAddress address, int port, int ackNum) throws Exception {
+        ByteBuffer ackBuffer = ByteBuffer.allocate(4);
+        ackBuffer.putInt(ackNum);
+        byte[] ackData = ackBuffer.array();
+        DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);
+        socket.send(ackPacket);
+        System.out.println("Sent ACK for SeqNum " + ackNum);
     }
 
     @Override
