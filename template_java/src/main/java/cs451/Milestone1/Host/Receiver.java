@@ -48,7 +48,7 @@ public class Receiver extends ActiveHost {
                 int senderId = byteBuffer.getInt();
 
                 String toWrite = "d " + senderId + " " + content;
-                System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
+                //System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
 
                 // Initialize the set for the sender if not present
                 deliveredSeqNums.computeIfAbsent(senderId, k -> new ConcurrentSkipListSet<>());
@@ -63,7 +63,7 @@ public class Receiver extends ActiveHost {
                     senderDelivered.add(seqNb);
                 } else {
                     // Duplicate message received; do not deliver again
-                    System.out.println("Duplicate message SeqNum " + seqNb + " from Sender " + senderId + " ignored for delivery.");
+                    //System.out.println("Duplicate message SeqNum " + seqNb + " from Sender " + senderId + " ignored for delivery.");
                 }
 
                 // Send individual ACK regardless of duplication
@@ -97,7 +97,7 @@ public class Receiver extends ActiveHost {
             byte[] ackData = ackBuffer.array();
             DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);
             socket.send(ackPacket);
-            System.out.println("Sent ACK for Sender " + senderId + " SeqNum " + ackNum);
+            //System.out.println("Sent ACK for Sender " + senderId + " SeqNum " + ackNum);
         } catch (Exception e) {
             e.printStackTrace();
         }

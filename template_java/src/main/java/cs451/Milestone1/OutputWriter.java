@@ -7,6 +7,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 
 public class OutputWriter {
@@ -25,13 +27,21 @@ public class OutputWriter {
      * @param line the line to be added to the buffer
      */
     public void addLine(String line) {
-        buffer.add(line);
-        bufferCount++;
+        String toWrite = line + "\n";
+
         try {
-            checkBuffer();
+            Files.write(Paths.get(outputFilePath), toWrite.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // buffer.add(line);
+        // bufferCount++;
+        // try {
+        //     checkBuffer();
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        // }
     }
     
     /**

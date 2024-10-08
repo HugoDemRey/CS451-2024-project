@@ -21,6 +21,6 @@ public class Constants {
     // indexes for PerfectLinks
     public static final int STANDARD_MESSAGE_SIZE_BYTES = 1024;
     public static final String ACK = "ACK";
-    public static final int TIMEOUT = 1000; // Timeout in milliseconds
+    public static final int TIMEOUT = 500; // Timeout in milliseconds
     public static final int MAX_RETRIES = 5; // Maximum number of retries
 }
