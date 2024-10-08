@@ -5,11 +5,13 @@ import java.nio.charset.StandardCharsets;
 public class Message {
     private int senderId;
     private String content;
+    private int seqNum;
 
 
-    public Message(int senderId, String content) {
+    public Message(int senderId, String content, int seqNum) {
         this.senderId = senderId;
         this.content = content;
+        this.seqNum = 0;
     }
 
     public String getContent() {
@@ -18,6 +20,14 @@ public class Message {
 
     public int getSenderId(){
         return senderId;
+    }
+
+    public int getSeqNum(){
+        return seqNum;
+    }
+
+    public void setSeqNum(int seqNumber){
+        this.seqNum = seqNumber;
     }
 
     @Override
