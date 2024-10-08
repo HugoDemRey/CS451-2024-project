@@ -13,8 +13,12 @@ import cs451.Milestone1.Message;
 import static cs451.Constants.*;
 
 public class Receiver extends ActiveHost {
-    // Map to keep track of expected sequence numbers per sender
+    // Map to keep track of expected sequence numbers per sender if in-order delivery is desired
+    // For out-of-order delivery, this can be omitted or used for tracking purposes
     private final Map<Integer, Integer> expectedSeqNums = new ConcurrentHashMap<>();
+
+    // To store out-of-order messages if needed for future in-order delivery
+    // private final Map<Integer, Map<Integer, Message>> receivedMessages = new ConcurrentHashMap<>();
 
     @Override
     public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
@@ -46,26 +50,14 @@ public class Receiver extends ActiveHost {
                 int senderId = byteBuffer.getInt();
 
                 String toWrite = "d " + senderId + " " + content;
-                System.out.println("RECEIVED SEQNUM" + seqNb);
+                System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
+
+                // Deliver the message immediately (out-of-order)
                 write(toWrite);
+                System.out.println("Delivered message SeqNum " + seqNb + " from Sender " + senderId);
+
+                // Send individual ACK
                 sendAck(socket, packet.getAddress(), packet.getPort(), senderId, seqNb);
-                //System.out.println("Received & Delivered message SeqNum " + seqNb + " from Sender " + senderId);
-
-                // Get the expected sequence number for this sender
-                // int expectedSeqNum = expectedSeqNums.getOrDefault(senderId, 0);
-
-                // if (seqNb == expectedSeqNum) {
-                //     // Deliver the data
-                //     expectedSeqNum++;
-                //     expectedSeqNums.put(senderId, expectedSeqNum);
-
-                //     // Send cumulative ACK
-                // } else {
-                //     // Duplicate or out-of-order packet, resend ACK for last in-order
-                //     int lastAck = expectedSeqNum - 1;
-                //     sendAck(socket, packet.getAddress(), packet.getPort(), senderId, lastAck);
-                //     System.out.println("Received out-of-order SeqNum " + seqNb + " from Sender " + senderId + ", expected " + expectedSeqNum);
-                // }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -88,9 +80,8 @@ public class Receiver extends ActiveHost {
      */
     private void sendAck(DatagramSocket socket, InetAddress address, int port, int senderId, int ackNum) {
         try {
-            // Create a unique ACK identifier by combining senderId and ackNum
-            // This ensures that ACKs are correctly associated with the right sender
-            ByteBuffer ackBuffer = ByteBuffer.allocate(8); // [senderId (4)] + [ackNum (4)]
+            // Create an ACK containing [senderId (4)] + [ackNum (4)]
+            ByteBuffer ackBuffer = ByteBuffer.allocate(8);
             ackBuffer.putInt(senderId);
             ackBuffer.putInt(ackNum);
             byte[] ackData = ackBuffer.array();
