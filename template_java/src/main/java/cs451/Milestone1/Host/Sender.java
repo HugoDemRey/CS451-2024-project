@@ -8,8 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.BlockingQueue;
-import cs451.Milestone1.MessageReceiverPair;
 
 import cs451.Constants;
 import cs451.Host;
@@ -24,7 +22,6 @@ public class Sender extends ActiveHost {
 
     // Sliding window variables
     private static final int WINDOW_SIZE = 5; // Example window size
-    private final AtomicInteger base = new AtomicInteger(0); // The sequence number of the oldest unacknowledged packet
     private final AtomicInteger nextSeqNum = new AtomicInteger(0); // The next sequence number to be used
     private final Map<Integer, MessageReceiverPair> window = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -39,6 +36,7 @@ public class Sender extends ActiveHost {
         boolean result = super.populate(idString, ipString, portString, outputFilePath);
         try {
             socket = new DatagramSocket();
+            socket.setSoTimeout(TIMEOUT);
             // Start the consumer thread for sending messages
             executor.execute(this::processQueue);
             // Start the listener thread for receiving ACKs
@@ -75,21 +73,21 @@ public class Sender extends ActiveHost {
                 Host receiver = pair.getReceiver();
                 Message message = pair.getMessage();
 
-                synchronized (this) {
-                    while (nextSeqNum.get() >= base.get() + WINDOW_SIZE) {
-                        // Wait until there is space in the window
-                        wait();
+                // Ensure window size
+                while (window.size() >= WINDOW_SIZE) {
+                    synchronized (window) {
+                        window.wait();
                     }
-
-                    // Assign sequence number and send the packet
-                    int seqNum = nextSeqNum.getAndIncrement();
-                    message.setSeqNum(seqNum);
-                    window.put(seqNum, pair);
-                    sendPacket(message, receiver);
-
-                    // Start timer for the packet
-                    startTimer(seqNum);
                 }
+
+                // Assign sequence number and send the packet
+                int seqNum = nextSeqNum.getAndIncrement();
+                message.setSeqNum(seqNum);
+                window.put(seqNum, pair);
+                sendPacket(message, receiver);
+
+                // Start timer for the packet
+                startTimer(seqNum);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -144,22 +142,23 @@ public class Sender extends ActiveHost {
 
                 System.out.println("Received ACK for Sender " + ackSenderId + " SeqNum " + ackSeqNum);
 
-                synchronized (this) {
-                    // Assuming single sender, or ACKs are only for this sender's messages
-                    if (ackSeqNum >= base.get()) {
-                        // Slide the window
-                        for (int seq = base.get(); seq <= ackSeqNum; seq++) {
-                            window.remove(seq);
-                            // Cancel the timer
-                            System.out.println("Cancelling timer for SeqNum " + seq);
-                            ScheduledFuture<?> timer = timers.remove(seq);
-                            if (timer != null) {
-                                timer.cancel(false);
-                            }
-                        }
-                        base.set(ackSeqNum + 1);
-                        notifyAll(); // Notify sender to send more packets
+                // Check if the ACK corresponds to a message in the window
+                MessageReceiverPair pair = window.get(ackSeqNum);
+                if (pair != null && pair.getMessage().getSenderId() == ackSenderId) {
+                    // Remove the message from the window
+                    window.remove(ackSeqNum);
+                    // Cancel the timer
+                    ScheduledFuture<?> timer = timers.remove(ackSeqNum);
+                    if (timer != null) {
+                        timer.cancel(false);
                     }
+                    // Notify any waiting threads that window has space
+                    synchronized (window) {
+                        window.notifyAll();
+                    }
+                    System.out.println("ACK processed for SeqNum " + ackSeqNum);
+                } else {
+                    System.out.println("Received ACK for unknown SeqNum " + ackSeqNum + " from Sender " + ackSenderId);
                 }
             }
         } catch (Exception e) {
@@ -173,16 +172,13 @@ public class Sender extends ActiveHost {
      * @param seqNum The sequence number of the packet.
      */
     private void startTimer(int seqNum) {
-        System.out.println("Starting timer for SeqNum " + seqNum);
         ScheduledFuture<?> timer = scheduler.schedule(() -> {
             try {
-                synchronized (Sender.this) {
-                    MessageReceiverPair pair = window.get(seqNum);
-                    if (pair != null) {
-                        System.out.println("Timeout for SeqNum " + seqNum + ", retransmitting...");
-                        sendPacket(pair.getMessage(), pair.getReceiver());
-                        startTimer(seqNum); // Restart the timer
-                    }
+                MessageReceiverPair pair = window.get(seqNum);
+                if (pair != null) {
+                    System.out.println("Timeout for SeqNum " + seqNum + ", retransmitting...");
+                    sendPacket(pair.getMessage(), pair.getReceiver());
+                    startTimer(seqNum); // Restart the timer
                 }
             } catch (Exception e) {
                 e.printStackTrace();
