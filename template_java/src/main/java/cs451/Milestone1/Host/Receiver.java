@@ -2,18 +2,19 @@ package cs451.Milestone1.Host;
 
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Set;
-import java.net.InetAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import cs451.Milestone1.Message;
 
 import static cs451.Constants.*;
 
 public class Receiver extends ActiveHost {
-    private int expectedSeqNum = 0;
+    // Map to keep track of expected sequence numbers per sender
+    private final Map<Integer, Integer> expectedSeqNums = new ConcurrentHashMap<>();
 
     @Override
     public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
@@ -21,6 +22,9 @@ public class Receiver extends ActiveHost {
         return result;
     }
 
+    /**
+     * Starts listening for incoming messages and sends ACKs accordingly.
+     */
     public void listenWithSlidingWindow() {
         DatagramSocket socket = null;
         try {
@@ -32,25 +36,35 @@ public class Receiver extends ActiveHost {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
+                // Deserialize message
                 ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData(), 0, packet.getLength());
                 int seqNb = byteBuffer.getInt();
+                int contentSizeBytes = byteBuffer.getInt();
+                byte[] contentBytes = new byte[contentSizeBytes];
+                byteBuffer.get(contentBytes);
+                String content = new String(contentBytes, StandardCharsets.UTF_8);
                 int senderId = byteBuffer.getInt();
-                byte[] dataBytes = new byte[packet.getLength() - 8];
-                byteBuffer.get(dataBytes);
-                String content = new String(dataBytes, StandardCharsets.UTF_8);
+
+                String toWrite = "d " + senderId + " " + content;
+                System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
+
+                // Get the expected sequence number for this sender
+                int expectedSeqNum = expectedSeqNums.getOrDefault(senderId, 0);
 
                 if (seqNb == expectedSeqNum) {
                     // Deliver the data
-                    write("d " + senderId + " " + content);
-                    System.out.println("Delivered message SeqNum " + seqNb);
+                    write(toWrite);
+                    System.out.println("Delivered message SeqNum " + seqNb + " from Sender " + senderId);
                     expectedSeqNum++;
+                    expectedSeqNums.put(senderId, expectedSeqNum);
 
                     // Send cumulative ACK
-                    sendAck(socket, packet.getAddress(), packet.getPort(), seqNb);
+                    sendAck(socket, packet.getAddress(), packet.getPort(), senderId, seqNb);
                 } else {
                     // Duplicate or out-of-order packet, resend ACK for last in-order
-                    sendAck(socket, packet.getAddress(), packet.getPort(), expectedSeqNum - 1);
-                    System.out.println("Received out-of-order SeqNum " + seqNb + ", expected " + expectedSeqNum);
+                    int lastAck = expectedSeqNum - 1;
+                    sendAck(socket, packet.getAddress(), packet.getPort(), senderId, lastAck);
+                    System.out.println("Received out-of-order SeqNum " + seqNb + " from Sender " + senderId + ", expected " + expectedSeqNum);
                 }
             }
         } catch (Exception e) {
@@ -58,18 +72,34 @@ public class Receiver extends ActiveHost {
         } finally {
             if (socket != null && !socket.isClosed()) {
                 socket.close();
-                System.out.println("Socket closed");
+                System.out.println("Receiver socket closed");
             }
         }
     }
 
-    private void sendAck(DatagramSocket socket, InetAddress address, int port, int ackNum) throws Exception {
-        ByteBuffer ackBuffer = ByteBuffer.allocate(4);
-        ackBuffer.putInt(ackNum);
-        byte[] ackData = ackBuffer.array();
-        DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);
-        socket.send(ackPacket);
-        System.out.println("Sent ACK for SeqNum " + ackNum);
+    /**
+     * Sends an ACK for a given sender and sequence number.
+     *
+     * @param socket   The DatagramSocket to send the ACK.
+     * @param address  The address of the sender.
+     * @param port     The port of the sender.
+     * @param senderId The ID of the sender.
+     * @param ackNum   The sequence number being acknowledged.
+     */
+    private void sendAck(DatagramSocket socket, InetAddress address, int port, int senderId, int ackNum) {
+        try {
+            // Create a unique ACK identifier by combining senderId and ackNum
+            // This ensures that ACKs are correctly associated with the right sender
+            ByteBuffer ackBuffer = ByteBuffer.allocate(8); // [senderId (4)] + [ackNum (4)]
+            ackBuffer.putInt(senderId);
+            ackBuffer.putInt(ackNum);
+            byte[] ackData = ackBuffer.array();
+            DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);
+            socket.send(ackPacket);
+            System.out.println("Sent ACK for Sender " + senderId + " SeqNum " + ackNum);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
