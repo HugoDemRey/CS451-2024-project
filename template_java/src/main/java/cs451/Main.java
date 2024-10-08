@@ -7,6 +7,9 @@ import cs451.Milestone1.Message;
 import cs451.Milestone1.Host.ActiveHost;
 import cs451.Milestone1.Host.Receiver;
 import cs451.Milestone1.Host.Sender;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class Main {
 
@@ -47,9 +50,20 @@ public class Main {
 
         
         // Implement the logic here from config file
-        int nbMessagesPerSender = 5;
-        int receiverId = 1;
+        int nbMessagesPerSender = -1;
+        int receiverId = -1;
         int myId = parser.myId();
+        // Read the configuration file to get nbMessagesPerSender and receiverId
+        try (BufferedReader br = new BufferedReader(new FileReader(parser.config()))) {
+            String line = br.readLine();
+            if (line != null) {
+                String[] parts = line.split(" ");
+                nbMessagesPerSender = Integer.parseInt(parts[0]);
+                receiverId = Integer.parseInt(parts[1]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // We only keep a list of Hosts and not Senders or Receivers, our current host does not need to access functions, we just need data.
         List<Host> receivers = new ArrayList<>();

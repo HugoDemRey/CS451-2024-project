@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import cs451.Constants;
 import cs451.Host;
 import cs451.Milestone1.Message;
+import cs451.Milestone1.MessageReceiverPair;
 
 import static cs451.Constants.*;
 
@@ -36,7 +37,6 @@ public class Sender extends ActiveHost {
         boolean result = super.populate(idString, ipString, portString, outputFilePath);
         try {
             socket = new DatagramSocket();
-            socket.setSoTimeout(TIMEOUT);
             // Start the consumer thread for sending messages
             executor.execute(this::processQueue);
             // Start the listener thread for receiving ACKs
@@ -119,7 +119,6 @@ public class Sender extends ActiveHost {
             byte[] packetData = byteBuffer.array();
             DatagramPacket packet = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
             socket.send(packet);
-            write("b " + message.getContent());
             System.out.println("Sent message with SeqNum " + message.getSeqNum() + " to " + receiver.getIp() + "/" + receiverPort);
         } catch (Exception e) {
             e.printStackTrace();
@@ -156,6 +155,7 @@ public class Sender extends ActiveHost {
                     synchronized (window) {
                         window.notifyAll();
                     }
+                    write("b " + pair.getMessage().getContent());
                     System.out.println("ACK processed for SeqNum " + ackSeqNum);
                 } else {
                     System.out.println("Received ACK for unknown SeqNum " + ackSeqNum + " from Sender " + ackSenderId);

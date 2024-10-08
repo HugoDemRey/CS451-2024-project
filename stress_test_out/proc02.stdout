@@ -1,0 +1,76 @@
+My PID: 18188
+
+From a new terminal type `kill -SIGINT 18188` or `kill -SIGTERM 18188` to stop processing packets
+
+My ID: 2
+
+List of resolved hosts is:
+==========================
+1
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11001
+
+3
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11003
+
+
+Path to output:
+===============
+/home/dcl/Projects/Ditributed Algorithms/GithubRepository/stress_test_out/proc02.output
+
+Path to config:
+===============
+./../stress_test_out/config
+
+Doing some initialization
+
+me = Sender{id=2, ip='127.0.0.1', port=11002}
+receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
+senders = [Host{id=3, ip='127.0.0.1', port=11003}]
+Broadcasting and delivering messages...
+
+Sending message: 1
+Sending message: 2
+Sending message: 3
+Sending message: 4
+Sending message: 5
+Sending message: 6
+Sending message: 7
+Sending message: 8
+Sending message: 9
+Sending message: 10
+Sent message with SeqNum 0 to 127.0.0.1/11001
+Sent message with SeqNum 1 to 127.0.0.1/11001
+Sent message with SeqNum 2 to 127.0.0.1/11001
+Sent message with SeqNum 3 to 127.0.0.1/11001
+Sent message with SeqNum 4 to 127.0.0.1/11001
+Received ACK for Sender 2 SeqNum 3
+Sent message with SeqNum 5 to 127.0.0.1/11001
+ACK processed for SeqNum 3
+Received ACK for Sender 2 SeqNum 0
+ACK processed for SeqNum 0
+Received ACK for Sender 2 SeqNum 2
+ACK processed for SeqNum 2
+Sent message with SeqNum 6 to 127.0.0.1/11001
+Sent message with SeqNum 7 to 127.0.0.1/11001
+Received ACK for Sender 2 SeqNum 1
+ACK processed for SeqNum 1
+Sent message with SeqNum 8 to 127.0.0.1/11001
+Received ACK for Sender 2 SeqNum 4
+ACK processed for SeqNum 4
+Sent message with SeqNum 9 to 127.0.0.1/11001
+Received ACK for Sender 2 SeqNum 5
+ACK processed for SeqNum 5
+Received ACK for Sender 2 SeqNum 9
+ACK processed for SeqNum 9
+Received ACK for Sender 2 SeqNum 7
+ACK processed for SeqNum 7
+Received ACK for Sender 2 SeqNum 6
+ACK processed for SeqNum 6
+Timeout for SeqNum 8, retransmitting...
+Sent message with SeqNum 8 to 127.0.0.1/11001
+Received ACK for Sender 2 SeqNum 8
+ACK processed for SeqNum 8
+Immediately stopping network packet processing.
+Writing output.
