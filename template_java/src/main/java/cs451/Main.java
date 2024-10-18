@@ -122,7 +122,6 @@ public class Main {
             case "Sender":
                 for (int i = 0; i < nbMessagesPerSender; i++) {
                     String content = (i+1) + "";
-                    System.out.println("Sending message: " + content);
                     ((Sender) me).enqueueMessage(new Message(myId, content), receivers.get(0));
                 }
                 break;

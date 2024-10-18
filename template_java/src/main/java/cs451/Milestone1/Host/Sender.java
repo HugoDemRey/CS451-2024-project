@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import cs451.Constants;
 import cs451.Host;
 import cs451.Milestone1.Message;
 import cs451.Milestone1.MessageReceiverPair;
@@ -22,8 +21,9 @@ public class Sender extends ActiveHost {
     private final ExecutorService executor = Executors.newFixedThreadPool(2); // One for sending, one for ACKs
 
     // Sliding window variables
-    private static final int WINDOW_SIZE = 25000; // Example window size
-    private final AtomicInteger nextSeqNum = new AtomicInteger(0); // The next sequence number to be used
+    private static AtomicInteger WINDOW_SIZE = new AtomicInteger(5000); // Example window size
+    private static AtomicInteger TIMEOUT = new AtomicInteger(700); // Example timeout in milliseconds
+    private final AtomicInteger nextSeqNum = new AtomicInteger(1); // The next sequence number to be used
     private final Map<Integer, MessageReceiverPair> window = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final Map<Integer, ScheduledFuture<?>> timers = new ConcurrentHashMap<>();
@@ -74,7 +74,7 @@ public class Sender extends ActiveHost {
                 Message message = pair.getMessage();
 
                 // Ensure window size
-                while (window.size() >= WINDOW_SIZE) {
+                while (window.size() >= WINDOW_SIZE.get()) {
                     synchronized (window) {
                         window.wait();
                     }
@@ -94,6 +94,33 @@ public class Sender extends ActiveHost {
             System.err.println("Sender queue processing interrupted: " + e.getMessage());
         }
     }
+
+
+    private AtomicInteger nbUnacks = new AtomicInteger(0);
+    private AtomicInteger nbAcks = new AtomicInteger(0);
+    private final int windowIncreaseChangeThreshold = 100;
+    private final int windowDecreaseChangeThreshold = 100;
+
+    private AtomicInteger nbDecreaseInARow = new AtomicInteger(0);    
+
+
+    private void adaptSlidingWindow(boolean isAck) {
+        if (isAck && nbAcks.incrementAndGet() >= windowIncreaseChangeThreshold) {
+            nbAcks.set(0);
+
+            WINDOW_SIZE.set(WINDOW_SIZE.get() * 2);
+            TIMEOUT.set(700);
+            System.out.println("Window size increased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get());
+
+        } else if (!isAck && nbUnacks.incrementAndGet() >= windowDecreaseChangeThreshold) {
+            nbUnacks.set(0);
+            WINDOW_SIZE.set(Math.max((int) (WINDOW_SIZE.get() / 1.5), 5000));
+            TIMEOUT.set(TIMEOUT.get() + 50);
+            System.out.println("Window size decreased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get());
+        }
+
+    }
+
 
     /**
      * Sends a packet containing the message to the specified receiver.
@@ -118,9 +145,13 @@ public class Sender extends ActiveHost {
 
             byte[] packetData = byteBuffer.array();
             DatagramPacket packet = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
-            if (isFirstTime) socket.send(packet);
-            write("b " + message.getContent());
-            System.out.println("Sent message with SeqNum " + message.getSeqNum() + " to " + receiver.getIp() + "/" + receiverPort);
+            socket.send(packet);
+            if (isFirstTime) {
+                write("b " + message.getContent());
+                System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + message.getContent());
+            } else {
+                System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + message.getContent());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -132,19 +163,21 @@ public class Sender extends ActiveHost {
     private void listenForAcks() {
         try {
             while (true) {
-                byte[] ackData = new byte[8]; // [senderId (4)] + [ackSeqNum (4)]
+                byte[] ackData = new byte[3 * Integer.BYTES]; // [OriginalSenderId (4)] [senderId (4)] + [ackSeqNum (4)]
                 DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
                 socket.receive(ackPacket);
 
                 ByteBuffer byteBuffer = ByteBuffer.wrap(ackPacket.getData(), 0, ackPacket.getLength());
-                int ackSenderId = byteBuffer.getInt();
+                int ackSenderId = byteBuffer.getInt();  
+                int ackOriginalSenderId = byteBuffer.getInt();
                 int ackSeqNum = byteBuffer.getInt();
+
 
                 //System.out.println("Received ACK for Sender " + ackSenderId + " SeqNum " + ackSeqNum);
 
                 // Check if the ACK corresponds to a message in the window
                 MessageReceiverPair pair = window.get(ackSeqNum);
-                if (pair != null && pair.getMessage().getSenderId() == ackSenderId) {
+                if (pair != null && pair.getMessage().getSenderId() == ackOriginalSenderId) {
                     // Remove the message from the window
                     window.remove(ackSeqNum);
                     // Cancel the timer
@@ -152,11 +185,14 @@ public class Sender extends ActiveHost {
                     if (timer != null) {
                         timer.cancel(false);
                     }
-                    // Notify any waiting threads that window has space
+                    System.out.println("\n✔ | p" + this.getId() + " ← p" + ackSenderId + " : seq n." + ackSeqNum + "\n");
+
+                    // Adapt the sliding window
+                    adaptSlidingWindow(true);
+
                     synchronized (window) {
                         window.notifyAll();
                     }
-                    //System.out.println("ACK processed for SeqNum " + ackSeqNum);
                 } else {
                     //System.out.println("Received ACK for unknown SeqNum " + ackSeqNum + " from Sender " + ackSenderId);
                 }
@@ -179,11 +215,14 @@ public class Sender extends ActiveHost {
                     //System.out.println("Timeout for SeqNum " + seqNum + ", retransmitting...");
                     sendPacket(pair.getMessage(), pair.getReceiver(), false);
                     startTimer(seqNum); // Restart the timer
+
+                    // Adapt the sliding window
+                    adaptSlidingWindow(false);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }, TIMEOUT, TimeUnit.MILLISECONDS);
+        }, TIMEOUT.get(), TimeUnit.MILLISECONDS);
 
         timers.put(seqNum, timer);
     }

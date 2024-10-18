@@ -24,6 +24,8 @@ public class Receiver extends ActiveHost {
         return result;
     }
 
+    private int receivedMessages = 0;
+
     /**
      * Starts listening for incoming messages and sends ACKs accordingly.
      */
@@ -47,21 +49,23 @@ public class Receiver extends ActiveHost {
                 String content = new String(contentBytes, StandardCharsets.UTF_8);
                 int senderId = byteBuffer.getInt();
 
-                String toWrite = "d " + senderId + " " + content;
                 //System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
-
+                
                 // Initialize the set for the sender if not present
                 deliveredSeqNums.computeIfAbsent(senderId, k -> new ConcurrentSkipListSet<>());
-
+                
                 // Check if the message has already been delivered
                 Set<Integer> senderDelivered = deliveredSeqNums.get(senderId);
                 if (!senderDelivered.contains(seqNb)) {
                     // Deliver the message
+                    String toWrite = "d " + senderId + " " + content;
+                    // String toWrite = receivedMessages++ + "";
                     write(toWrite);
-                    System.out.println("Delivered message SeqNum " + seqNb + " from Sender " + senderId);
+                    System.out.println("↩ | p" + this.getId() + " ← p" + senderId + " : seq n." + content);
                     // Mark the sequence number as delivered
                     senderDelivered.add(seqNb);
                 } else {
+                    System.out.println("⚠ | p" + this.getId() + " ← p" + senderId + " : seq n." + content);
                     // Duplicate message received; do not deliver again
                     //System.out.println("Duplicate message SeqNum " + seqNb + " from Sender " + senderId + " ignored for delivery.");
                 }
@@ -85,19 +89,20 @@ public class Receiver extends ActiveHost {
      * @param socket   The DatagramSocket to send the ACK.
      * @param address  The address of the sender.
      * @param port     The port of the sender.
-     * @param senderId The ID of the sender.
+     * @param originalSenderId The ID of the sender.
      * @param ackNum   The sequence number being acknowledged.
      */
-    private void sendAck(DatagramSocket socket, InetAddress address, int port, int senderId, int ackNum) {
+    private void sendAck(DatagramSocket socket, InetAddress address, int port, int originalSenderId, int ackNum) {
         try {
-            // Create an ACK containing [senderId (4)] + [ackNum (4)]
-            ByteBuffer ackBuffer = ByteBuffer.allocate(8);
-            ackBuffer.putInt(senderId);
+            // Create an ACK containing [OriginalSenderId (4)] [senderId (4)] + [ackNum (4)]]
+            ByteBuffer ackBuffer = ByteBuffer.allocate(3 * Integer.BYTES);
+            ackBuffer.putInt(this.getId());
+            ackBuffer.putInt(originalSenderId);
             ackBuffer.putInt(ackNum);
             byte[] ackData = ackBuffer.array();
             DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);
             socket.send(ackPacket);
-            //System.out.println("Sent ACK for Sender " + senderId + " SeqNum " + ackNum);
+            System.out.println("↪ | p" + this.getId() + " → p" + originalSenderId + " : seq n." + ackNum + "\n");
         } catch (Exception e) {
             e.printStackTrace();
         }

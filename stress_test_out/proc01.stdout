@@ -1,6 +1,6 @@
-My PID: 18187
+My PID: 32074
 
-From a new terminal type `kill -SIGINT 18187` or `kill -SIGTERM 18187` to stop processing packets
+From a new terminal type `kill -SIGINT 32074` or `kill -SIGTERM 32074` to stop processing packets
 
 My ID: 1
 
@@ -17,7 +17,7 @@ Human-readable Port: 11003
 
 Path to output:
 ===============
-/home/dcl/Projects/Ditributed Algorithms/GithubRepository/stress_test_out/proc01.output
+/home/dcl/Projects/Distributed_Algorithms/GithubRepository/stress_test_out/proc01.output
 
 Path to config:
 ===============
@@ -31,65 +31,63 @@ senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', po
 Broadcasting and delivering messages...
 
 Host 1 is listening on 127.0.0.1/11001
-Received message SeqNum 1 from Sender 2
-Delivered message SeqNum 1 from Sender 2
-Sent ACK for Sender 2 SeqNum 1
-Received message SeqNum 0 from Sender 2
-Delivered message SeqNum 0 from Sender 2
-Sent ACK for Sender 2 SeqNum 0
-Received message SeqNum 4 from Sender 2
-Delivered message SeqNum 4 from Sender 2
-Sent ACK for Sender 2 SeqNum 4
-Received message SeqNum 3 from Sender 2
-Delivered message SeqNum 3 from Sender 2
-Sent ACK for Sender 2 SeqNum 3
-Received message SeqNum 2 from Sender 2
-Delivered message SeqNum 2 from Sender 2
-Sent ACK for Sender 2 SeqNum 2
-Received message SeqNum 0 from Sender 3
-Delivered message SeqNum 0 from Sender 3
-Sent ACK for Sender 3 SeqNum 0
-Received message SeqNum 4 from Sender 3
-Delivered message SeqNum 4 from Sender 3
-Sent ACK for Sender 3 SeqNum 4
-Received message SeqNum 2 from Sender 3
-Delivered message SeqNum 2 from Sender 3
-Sent ACK for Sender 3 SeqNum 2
-Received message SeqNum 3 from Sender 3
-Delivered message SeqNum 3 from Sender 3
-Sent ACK for Sender 3 SeqNum 3
-Received message SeqNum 1 from Sender 3
-Delivered message SeqNum 1 from Sender 3
-Sent ACK for Sender 3 SeqNum 1
-Received message SeqNum 6 from Sender 2
-Delivered message SeqNum 6 from Sender 2
-Sent ACK for Sender 2 SeqNum 6
-Received message SeqNum 5 from Sender 2
-Delivered message SeqNum 5 from Sender 2
-Sent ACK for Sender 2 SeqNum 5
-Received message SeqNum 9 from Sender 2
-Delivered message SeqNum 9 from Sender 2
-Sent ACK for Sender 2 SeqNum 9
-Received message SeqNum 7 from Sender 2
-Delivered message SeqNum 7 from Sender 2
-Sent ACK for Sender 2 SeqNum 7
-Received message SeqNum 5 from Sender 3
-Delivered message SeqNum 5 from Sender 3
-Sent ACK for Sender 3 SeqNum 5
-Received message SeqNum 6 from Sender 3
-Delivered message SeqNum 6 from Sender 3
-Sent ACK for Sender 3 SeqNum 6
-Received message SeqNum 8 from Sender 3
-Delivered message SeqNum 8 from Sender 3
-Sent ACK for Sender 3 SeqNum 8
-Received message SeqNum 9 from Sender 3
-Delivered message SeqNum 9 from Sender 3
-Sent ACK for Sender 3 SeqNum 9
-Received message SeqNum 7 from Sender 3
-Delivered message SeqNum 7 from Sender 3
-Sent ACK for Sender 3 SeqNum 7
-Received message SeqNum 8 from Sender 2
-Delivered message SeqNum 8 from Sender 2
-Sent ACK for Sender 2 SeqNum 8
-Immediately stopping network packet processing.
-Writing output.
+↩ | p1 ← p3 : seq n.5
+↪ | p1 → p3 : seq n.5
+
+↩ | p1 ← p3 : seq n.7
+↪ | p1 → p3 : seq n.7
+
+↩ | p1 ← p3 : seq n.8
+↪ | p1 → p3 : seq n.8
+
+↩ | p1 ← p3 : seq n.10
+↪ | p1 → p3 : seq n.10
+
+↩ | p1 ← p3 : seq n.2
+↪ | p1 → p3 : seq n.2
+
+↩ | p1 ← p3 : seq n.9
+↪ | p1 → p3 : seq n.9
+
+↩ | p1 ← p3 : seq n.3
+↪ | p1 → p3 : seq n.3
+
+↩ | p1 ← p3 : seq n.4
+↪ | p1 → p3 : seq n.4
+
+↩ | p1 ← p3 : seq n.6
+↪ | p1 → p3 : seq n.6
+
+↩ | p1 ← p2 : seq n.1
+↪ | p1 → p2 : seq n.1
+
+↩ | p1 ← p2 : seq n.8
+↪ | p1 → p2 : seq n.8
+
+↩ | p1 ← p2 : seq n.4
+↪ | p1 → p2 : seq n.4
+
+↩ | p1 ← p2 : seq n.7
+↪ | p1 → p2 : seq n.7
+
+↩ | p1 ← p2 : seq n.9
+↪ | p1 → p2 : seq n.9
+
+↩ | p1 ← p2 : seq n.5
+↪ | p1 → p2 : seq n.5
+
+↩ | p1 ← p2 : seq n.6
+↪ | p1 → p2 : seq n.6
+
+↩ | p1 ← p2 : seq n.10
+↪ | p1 → p2 : seq n.10
+
+↩ | p1 ← p2 : seq n.3
+↪ | p1 → p2 : seq n.3
+
+↩ | p1 ← p3 : seq n.1
+↪ | p1 → p3 : seq n.1
+
+↩ | p1 ← p2 : seq n.2
+↪ | p1 → p2 : seq n.2
+
