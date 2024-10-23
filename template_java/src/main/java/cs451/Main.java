@@ -122,6 +122,7 @@ public class Main {
             case "Sender":
                 for (int i = 0; i < nbMessagesPerSender; i++) {
                     String content = (i+1) + "";
+                    // String content = java.util.UUID.randomUUID().toString().substring(0, 5); // should work with any string
                     ((Sender) me).enqueueMessage(new Message(myId, content), receivers.get(0));
                 }
                 break;

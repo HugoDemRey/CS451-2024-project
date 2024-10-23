@@ -101,7 +101,6 @@ public class Sender extends ActiveHost {
     private final int windowIncreaseChangeThreshold = 100;
     private final int windowDecreaseChangeThreshold = 100;
 
-    private AtomicInteger nbDecreaseInARow = new AtomicInteger(0);    
 
 
     private void adaptSlidingWindow(boolean isAck) {
@@ -109,7 +108,7 @@ public class Sender extends ActiveHost {
             nbAcks.set(0);
 
             WINDOW_SIZE.set(WINDOW_SIZE.get() * 2);
-            TIMEOUT.set(700);
+            TIMEOUT.set(Math.max(700, TIMEOUT.get() - 100));
             System.out.println("Window size increased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get());
 
         } else if (!isAck && nbUnacks.incrementAndGet() >= windowDecreaseChangeThreshold) {
@@ -137,6 +136,10 @@ public class Sender extends ActiveHost {
             int contentSizeBytes = contentBytes.length;
 
             // Allocate bytes: [seqNum (4)] + [content size (4)] + [content] + [senderId (4)]
+            /* 
+            TODO : Allow until 8 messages (<64kiB in total) to be sent in the same packet by adding a variable nbMessages
+            and do a for loop of the byteBuffer.putInt(contentSizeBytes) and byteBuffer.put(contentBytes) lines.
+            */
             ByteBuffer byteBuffer = ByteBuffer.allocate(4 + 4 + contentSizeBytes + 4);
             byteBuffer.putInt(message.getSeqNum());
             byteBuffer.putInt(contentSizeBytes);
@@ -148,9 +151,9 @@ public class Sender extends ActiveHost {
             socket.send(packet);
             if (isFirstTime) {
                 write("b " + message.getContent());
-                System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + message.getContent());
+                System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + message.getSeqNum() + " | content=" + message.getContent());
             } else {
-                System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + message.getContent());
+                System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + message.getSeqNum() + " | content=" + message.getContent());
             }
         } catch (Exception e) {
             e.printStackTrace();

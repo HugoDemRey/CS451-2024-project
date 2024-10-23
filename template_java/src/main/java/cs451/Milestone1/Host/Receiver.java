@@ -24,7 +24,6 @@ public class Receiver extends ActiveHost {
         return result;
     }
 
-    private int receivedMessages = 0;
 
     /**
      * Starts listening for incoming messages and sends ACKs accordingly.
@@ -61,11 +60,11 @@ public class Receiver extends ActiveHost {
                     String toWrite = "d " + senderId + " " + content;
                     // String toWrite = receivedMessages++ + "";
                     write(toWrite);
-                    System.out.println("↩ | p" + this.getId() + " ← p" + senderId + " : seq n." + content);
+                    System.out.println("↩ | p" + this.getId() + " ← p" + senderId + " : seq n." + seqNb + " | content=" + content);
                     // Mark the sequence number as delivered
                     senderDelivered.add(seqNb);
                 } else {
-                    System.out.println("⚠ | p" + this.getId() + " ← p" + senderId + " : seq n." + content);
+                    System.out.println("⚠ | p" + this.getId() + " ← p" + senderId + " : seq n." + seqNb + " | content=" + content + " (duplicate)");
                     // Duplicate message received; do not deliver again
                     //System.out.println("Duplicate message SeqNum " + seqNb + " from Sender " + senderId + " ignored for delivery.");
                 }
