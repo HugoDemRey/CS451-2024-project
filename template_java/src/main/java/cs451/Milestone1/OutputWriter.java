@@ -27,7 +27,7 @@ public class OutputWriter {
      * @param line the line to be added to the buffer
      */
     public void addLine(String line) {
-        String toWrite = line + "\n";
+        String toWrite = line;
 
         try {
             Files.write(Paths.get(outputFilePath), toWrite.getBytes(), StandardOpenOption.APPEND);
