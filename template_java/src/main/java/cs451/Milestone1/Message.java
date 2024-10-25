@@ -37,4 +37,13 @@ public class Message {
     public void setContent(String content) {
         this.content = content;
     }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "seqNum=" + seqNum +
+                ", senderId=" + senderId +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

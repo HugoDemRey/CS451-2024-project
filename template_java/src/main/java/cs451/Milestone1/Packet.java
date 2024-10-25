@@ -24,4 +24,13 @@ public class Packet {
     public Host getReceiver() {
         return receiver;
     }
+
+    @Override
+    public String toString() {
+        return "Packet{" +
+                "messages=" + messages +
+                ", nbMessages=" + nbMessages +
+                ", receiver=" + receiver +
+                '}';
+    }
 }

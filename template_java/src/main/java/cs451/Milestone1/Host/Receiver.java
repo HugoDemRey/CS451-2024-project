@@ -33,7 +33,7 @@ public class Receiver extends ActiveHost {
         DatagramSocket socket = null;
         try {
             socket = new DatagramSocket(getPort());
-            byte[] buffer = new byte[MAXIMUM_PACKET_SITE_BYTES];
+            byte[] buffer = new byte[MAX_PACKET_SIZE_BYTES];
             System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
 
             while (true) {
