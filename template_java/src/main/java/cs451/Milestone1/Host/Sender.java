@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import cs451.Host;
 import cs451.Milestone1.Message;
 import cs451.Milestone1.MessageReceiverPair;
+import cs451.Milestone1.Packet;
 
 import static cs451.Constants.*;
 
@@ -21,12 +22,13 @@ public class Sender extends ActiveHost {
     private final ExecutorService executor = Executors.newFixedThreadPool(2); // One for sending, one for ACKs
 
     // Sliding window variables
-    private static AtomicInteger WINDOW_SIZE = new AtomicInteger(5000); // Example window size
-    private static AtomicInteger TIMEOUT = new AtomicInteger(700); // Example timeout in milliseconds
+    private static AtomicInteger WINDOW_SIZE = new AtomicInteger(STANDARD_WINDOW_SIZE); // Example window size
+    private static AtomicInteger TIMEOUT = new AtomicInteger(STANDARD_TIMEOUT); // Example timeout in milliseconds
     private final AtomicInteger nextSeqNum = new AtomicInteger(1); // The next sequence number to be used
-    private final Map<Integer, MessageReceiverPair> window = new ConcurrentHashMap<>();
+    private final Map<Integer, Packet> window = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final Map<Integer, ScheduledFuture<?>> timers = new ConcurrentHashMap<>();
+    private final Message[] messagesToSend = new Message[MAX_MESSAGES_PER_PACKET];
 
     public Sender() {
         // Initialize any necessary components
@@ -69,9 +71,25 @@ public class Sender extends ActiveHost {
     private void processQueue() {
         try {
             while (true) {
-                MessageReceiverPair pair = messageQueue.take(); // Blocks if queue is empty
-                Host receiver = pair.getReceiver();
-                Message message = pair.getMessage();
+
+                MessageReceiverPair firstPair = messageQueue.take(); // Blocks if queue is empty
+                Host receiver = firstPair.getReceiver();
+                messagesToSend[0] = firstPair.getMessage();
+                int nbTreated = 1;
+
+
+                for (int i = 1; i < MAX_MESSAGES_PER_PACKET; i++) {
+                    if (messageQueue.isEmpty()) break;
+                    if (messageQueue.peek().getReceiver() != receiver) break;
+                    //TODO: Check that the message that will be send does not exceed the maximum size of 64KiB
+                    
+                    MessageReceiverPair pair = messageQueue.take();
+                    messagesToSend[i] = pair.getMessage();
+                    nbTreated++;
+                }
+
+                System.out.println("### Could treat " + nbTreated + " messages now ###");
+                
 
                 // Ensure window size
                 while (window.size() >= WINDOW_SIZE.get()) {
@@ -82,9 +100,9 @@ public class Sender extends ActiveHost {
 
                 // Assign sequence number and send the packet
                 int seqNum = nextSeqNum.getAndIncrement();
-                message.setSeqNum(seqNum);
-                window.put(seqNum, pair);
-                sendPacket(message, receiver, true);
+                messagesToSend[0].setSeqNum(seqNum);
+                window.put(seqNum, new Packet(messagesToSend, nbTreated, receiver));
+                sendPacket(messagesToSend, nbTreated, receiver, true);
 
                 // Start timer for the packet
                 startTimer(seqNum);
@@ -107,14 +125,14 @@ public class Sender extends ActiveHost {
         if (isAck && nbAcks.incrementAndGet() >= windowIncreaseChangeThreshold) {
             nbAcks.set(0);
 
-            WINDOW_SIZE.set(WINDOW_SIZE.get() * 2);
-            TIMEOUT.set(Math.max(700, TIMEOUT.get() - 100));
+            WINDOW_SIZE.set(Math.min(WINDOW_SIZE.get() * 2, MAXIMUM_PACKET_SITE_BYTES));
+            TIMEOUT.set(Math.max(STANDARD_TIMEOUT - 200, TIMEOUT.get() - 100));
             System.out.println("Window size increased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get());
 
         } else if (!isAck && nbUnacks.incrementAndGet() >= windowDecreaseChangeThreshold) {
             nbUnacks.set(0);
-            WINDOW_SIZE.set(Math.max((int) (WINDOW_SIZE.get() / 1.5), 5000));
-            TIMEOUT.set(TIMEOUT.get() + 50);
+            WINDOW_SIZE.set(Math.max((int) (WINDOW_SIZE.get() / 1.5), STANDARD_WINDOW_SIZE));
+            TIMEOUT.set(Math.min(TIMEOUT.get() + 50, MAXIMUM_TIMEOUT));
             System.out.println("Window size decreased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get());
         }
 
@@ -124,36 +142,61 @@ public class Sender extends ActiveHost {
     /**
      * Sends a packet containing the message to the specified receiver.
      *
-     * @param message  The message to send.
+     * @param messages  The message to send.
      * @param receiver The intended receiver.
+     * @param isFirstTime Whether this is the first time the packet is being sent.
+     * @param nbMessages The number of messages in the packet.
      */
-    private void sendPacket(Message message, Host receiver, boolean isFirstTime) {
+    private void sendPacket(Message[] messages, int nbMessages, Host receiver, boolean isFirstTime) {
         try {
             InetAddress receiverAddress = InetAddress.getByName(receiver.getIp());
             int receiverPort = receiver.getPort();
 
-            byte[] contentBytes = message.getContent().getBytes(StandardCharsets.UTF_8);
-            int contentSizeBytes = contentBytes.length;
+            byte[][] contentBytes = new byte[nbMessages][];
+            int[] contentSizeBytes = new int[nbMessages];
+            int contentTotalSize = 0;
+            for (int i = 0; i < nbMessages; i++) {
+                contentBytes[i] = messages[i].getContent().getBytes(StandardCharsets.UTF_8);
+                contentSizeBytes[i] = contentBytes[i].length;
+                contentTotalSize += Integer.BYTES + contentSizeBytes[i];
+            }
 
-            // Allocate bytes: [seqNum (4)] + [content size (4)] + [content] + [senderId (4)]
-            /* 
-            TODO : Allow until 8 messages (<64kiB in total) to be sent in the same packet by adding a variable nbMessages
-            and do a for loop of the byteBuffer.putInt(contentSizeBytes) and byteBuffer.put(contentBytes) lines.
-            */
-            ByteBuffer byteBuffer = ByteBuffer.allocate(4 + 4 + contentSizeBytes + 4);
-            byteBuffer.putInt(message.getSeqNum());
-            byteBuffer.putInt(contentSizeBytes);
-            byteBuffer.put(contentBytes);
-            byteBuffer.putInt(message.getSenderId());
+            /*
+             * Packet Format : 
+             * [seqNum (4 Bytes)] 
+             * [nbMessages (4 Bytes)]
+             * [contentSize1 (4 Bytes)] 
+             * [content1 (contentSize1 Bytes)]
+             * [contentSize 2 (4 Bytes)]
+             * [content2 (contentSize2 Bytes)]
+             * ...
+             * [senderId (4 Bytes)]
+             */
+
+            // Allocation of the byte buffer
+            ByteBuffer byteBuffer = ByteBuffer.allocate(3*Integer.BYTES + contentTotalSize);
+
+            // The sequence number of the packet (used for acks) is the sequence number of the first message
+            byteBuffer.putInt(messages[0].getSeqNum());
+            byteBuffer.putInt(nbMessages);
+            for (int i = 0; i < nbMessages; i++) {
+                byteBuffer.putInt(contentSizeBytes[i]);
+                byteBuffer.put(contentBytes[i]);
+            }
+            byteBuffer.putInt(messages[0].getSenderId());
 
             byte[] packetData = byteBuffer.array();
             DatagramPacket packet = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
             socket.send(packet);
             if (isFirstTime) {
-                write("b " + message.getContent());
-                System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + message.getSeqNum() + " | content=" + message.getContent());
+                StringBuilder toWriteBuilder = new StringBuilder("");
+                for (int i = 0; i < nbMessages; i++) {
+                    toWriteBuilder.append("b " + messages[i].getContent() + "\n");
+                }
+                write(toWriteBuilder.toString());
+                System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
             } else {
-                System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + message.getSeqNum() + " | content=" + message.getContent());
+                System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -175,13 +218,12 @@ public class Sender extends ActiveHost {
                 int ackOriginalSenderId = byteBuffer.getInt();
                 int ackSeqNum = byteBuffer.getInt();
 
-
-                //System.out.println("Received ACK for Sender " + ackSenderId + " SeqNum " + ackSeqNum);
-
+                
                 // Check if the ACK corresponds to a message in the window
-                MessageReceiverPair pair = window.get(ackSeqNum);
-                if (pair != null && pair.getMessage().getSenderId() == ackOriginalSenderId) {
+                Packet packet = window.get(ackSeqNum);
+                if (packet != null && this.getId() == ackOriginalSenderId) {
                     // Remove the message from the window
+                    System.out.println("ACK" + ackSeqNum);
                     window.remove(ackSeqNum);
                     // Cancel the timer
                     ScheduledFuture<?> timer = timers.remove(ackSeqNum);
@@ -213,10 +255,10 @@ public class Sender extends ActiveHost {
     private void startTimer(int seqNum) {
         ScheduledFuture<?> timer = scheduler.schedule(() -> {
             try {
-                MessageReceiverPair pair = window.get(seqNum);
-                if (pair != null) {
+                Packet packet = window.get(seqNum);
+                if (packet != null) {
                     //System.out.println("Timeout for SeqNum " + seqNum + ", retransmitting...");
-                    sendPacket(pair.getMessage(), pair.getReceiver(), false);
+                    sendPacket(packet.getMessages(), packet.getNbMessages(), packet.getReceiver(), false);
                     startTimer(seqNum); // Restart the timer
 
                     // Adapt the sliding window
