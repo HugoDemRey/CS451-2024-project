@@ -17,6 +17,7 @@ import static cs451.Constants.*;
 public class Receiver extends ActiveHost {
     // Map to keep track of delivered sequence numbers per sender
     private final Map<Integer, Set<Integer>> deliveredSeqNums = new ConcurrentHashMap<>();
+    private final Message[] messagesReceived = new Message[MAX_MESSAGES_PER_PACKET];
 
     @Override
     public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
@@ -32,20 +33,27 @@ public class Receiver extends ActiveHost {
         DatagramSocket socket = null;
         try {
             socket = new DatagramSocket(getPort());
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[MAXIMUM_PACKET_SITE_BYTES];
             System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
+                
                 // Deserialize message
                 ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData(), 0, packet.getLength());
                 int seqNb = byteBuffer.getInt();
-                int contentSizeBytes = byteBuffer.getInt();
-                byte[] contentBytes = new byte[contentSizeBytes];
-                byteBuffer.get(contentBytes);
-                String content = new String(contentBytes, StandardCharsets.UTF_8);
+                int nbMessages = byteBuffer.getInt();
+
+                byte[][] contentBytes = new byte[nbMessages][];
+                String[] content = new String[nbMessages];
+                for (int i = 0; i < nbMessages; i++) {
+                    int contentSizeBytes = byteBuffer.getInt();
+                    contentBytes[i] = new byte[contentSizeBytes];
+                    byteBuffer.get(contentBytes[i]);
+                    content[i] = new String(contentBytes[i], StandardCharsets.UTF_8);
+                }
                 int senderId = byteBuffer.getInt();
 
                 //System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
@@ -57,9 +65,14 @@ public class Receiver extends ActiveHost {
                 Set<Integer> senderDelivered = deliveredSeqNums.get(senderId);
                 if (!senderDelivered.contains(seqNb)) {
                     // Deliver the message
-                    String toWrite = "d " + senderId + " " + content;
+                    StringBuilder toWriteBuilder = new StringBuilder();
+
+                    for (int i = 0; i < nbMessages; i++) {
+                        toWriteBuilder.append("d " + senderId + " " + content[i] + "\n");
+                    }
+
                     // String toWrite = receivedMessages++ + "";
-                    write(toWrite);
+                    write(toWriteBuilder.toString());
                     System.out.println("↩ | p" + this.getId() + " ← p" + senderId + " : seq n." + seqNb + " | content=" + content);
                     // Mark the sequence number as delivered
                     senderDelivered.add(seqNb);
