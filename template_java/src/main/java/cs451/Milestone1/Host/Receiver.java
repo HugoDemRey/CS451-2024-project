@@ -34,7 +34,7 @@ public class Receiver extends ActiveHost {
         try {
             socket = new DatagramSocket(getPort());
             byte[] buffer = new byte[MAX_PACKET_SIZE_BYTES];
-            System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
+            //System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -55,8 +55,6 @@ public class Receiver extends ActiveHost {
                     content[i] = new String(contentBytes[i], StandardCharsets.UTF_8);
                 }
                 int senderId = byteBuffer.getInt();
-
-                //System.out.println("Received message SeqNum " + seqNb + " from Sender " + senderId);
                 
                 // Initialize the set for the sender if not present
                 deliveredSeqNums.computeIfAbsent(senderId, k -> new ConcurrentSkipListSet<>());
@@ -73,13 +71,12 @@ public class Receiver extends ActiveHost {
 
                     // String toWrite = receivedMessages++ + "";
                     write(toWriteBuilder.toString());
-                    System.out.println("↩ | p" + this.getId() + " ← p" + senderId + " : seq n." + seqNb + " | content=" + content);
+                    //System.out.println("↩ | p" + this.getId() + " ← p" + senderId + " : seq n." + seqNb + " | content=" + content);
                     // Mark the sequence number as delivered
                     senderDelivered.add(seqNb);
                 } else {
-                    System.out.println("⚠ | p" + this.getId() + " ← p" + senderId + " : seq n." + seqNb + " | content=" + content + " (duplicate)");
                     // Duplicate message received; do not deliver again
-                    //System.out.println("Duplicate message SeqNum " + seqNb + " from Sender " + senderId + " ignored for delivery.");
+                    //System.out.println("⚠ | p" + this.getId() + " ← p" + senderId + " : seq n." + seqNb + " | content=" + content + " (duplicate)");
                 }
 
                 // Send individual ACK regardless of duplication
@@ -90,7 +87,7 @@ public class Receiver extends ActiveHost {
         } finally {
             if (socket != null && !socket.isClosed()) {
                 socket.close();
-                System.out.println("Receiver socket closed");
+                //System.out.println("Receiver socket closed");
             }
         }
     }
@@ -114,7 +111,7 @@ public class Receiver extends ActiveHost {
             byte[] ackData = ackBuffer.array();
             DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);
             socket.send(ackPacket);
-            System.out.println("↪ | p" + this.getId() + " → p" + originalSenderId + " : seq n." + ackNum + "\n");
+            //System.out.println("↪ | p" + this.getId() + " → p" + originalSenderId + " : seq n." + ackNum + "\n");
         } catch (Exception e) {
             e.printStackTrace();
         }

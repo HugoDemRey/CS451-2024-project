@@ -27,21 +27,21 @@ public class OutputWriter {
      * @param line the line to be added to the buffer
      */
     public void addLine(String line) {
-        String toWrite = line;
+        //String toWrite = line;
 
-        try {
-            Files.write(Paths.get(outputFilePath), toWrite.getBytes(), StandardOpenOption.APPEND);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // buffer.add(line);
-        // bufferCount++;
         // try {
-        //     checkBuffer();
+        //     Files.write(Paths.get(outputFilePath), toWrite.getBytes(), StandardOpenOption.APPEND);
         // } catch (IOException e) {
         //     e.printStackTrace();
         // }
+
+        buffer.add(line);
+        bufferCount++;
+        try {
+            checkBuffer();
+        } catch (IOException e) {
+           e.printStackTrace();
+        }
     }
     
     /**
@@ -76,7 +76,6 @@ public class OutputWriter {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath), StandardOpenOption.APPEND)) {
             for (String line : buffer) {
                 writer.write(line);
-                writer.newLine();
             }
         }
         buffer.clear();

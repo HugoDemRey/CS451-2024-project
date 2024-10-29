@@ -1,10 +1,10 @@
 #!/bin/bash
 
-readonly BASE_PATH="/home/dcl/Projects/Distributed_Algorithms/GitRepository/template_java/"
+readonly BASE_PATH="/home/dcl/Projects/Distributed_Algorithms/GithubRepository/template_java/"
 readonly RUN_PATH="run.sh"
 readonly BUILD_PATH="build.sh"
 readonly TC_PATH="../tools/tc.py"
-readonly OUTPUT_PATH="/home/dcl/Projects/Distributed_Algorithms/GitRepository/example/output"
+readonly OUTPUT_PATH="/home/dcl/Projects/Distributed_Algorithms/GithubRepository/example/output"
 readonly HOSTS_PATH="../example/hosts"
 readonly PERFECT_LINKS_PATH="../example/configs/perfect-links.config"
 readonly THROUGHPUT_PATH="src/main/java/cs451/tests/compute_throughput.py"

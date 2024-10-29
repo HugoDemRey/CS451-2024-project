@@ -150,15 +150,11 @@ public class Sender extends ActiveHost {
 
             WINDOW_SIZE.set(Math.min(WINDOW_SIZE.get() * 2, MAX_PACKET_SIZE_BYTES));
             TIMEOUT.set(Math.max(STANDARD_TIMEOUT - 200, TIMEOUT.get() - 100));
-            //System.out.println("Window size increased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get());
-            // write("Window size increased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get() + "\n\n");
 
         } else if (!isAck && nbUnacks.incrementAndGet() >= windowDecreaseChangeThreshold) {
             nbUnacks.set(0);
             WINDOW_SIZE.set(Math.max((int) (WINDOW_SIZE.get() / 1.5), STANDARD_WINDOW_SIZE));
             TIMEOUT.set(Math.min(TIMEOUT.get() + 50, MAX_TIMEOUT));
-            //System.out.println("Window size decreased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get());
-            // write("Window size decreased to " + WINDOW_SIZE.get() + " Timeout " + TIMEOUT.get() + "\n\n");
         }
 
     }
@@ -220,9 +216,9 @@ public class Sender extends ActiveHost {
                     toWriteBuilder.append("b " + messages[i].getContent() + "\n");
                 }
                 write(toWriteBuilder.toString());
-                System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
+                //System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
             } else {
-                System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
+                //System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -249,14 +245,14 @@ public class Sender extends ActiveHost {
                 Packet packet = window.get(ackSeqNum);
                 if (packet != null && this.getId() == ackOriginalSenderId) {
                     // Remove the message from the window
-                    System.out.println("ACK" + ackSeqNum);
+                    //System.out.println("ACK" + ackSeqNum);
                     window.remove(ackSeqNum);
                     // Cancel the timer
                     ScheduledFuture<?> timer = timers.remove(ackSeqNum);
                     if (timer != null) {
                         timer.cancel(false);
                     }
-                    System.out.println("\n✔ | p" + this.getId() + " ← p" + ackSenderId + " : seq n." + ackSeqNum + "\n");
+                    //System.out.println("\n✔ | p" + this.getId() + " ← p" + ackSenderId + " : seq n." + ackSeqNum + "\n");
 
                     // Adapt the sliding window
                     adaptSlidingWindow(true);
@@ -264,8 +260,6 @@ public class Sender extends ActiveHost {
                     synchronized (window) {
                         window.notifyAll();
                     }
-                } else {
-                    //System.out.println("Received ACK for unknown SeqNum " + ackSeqNum + " from Sender " + ackSenderId);
                 }
             }
         } catch (Exception e) {
@@ -283,7 +277,7 @@ public class Sender extends ActiveHost {
             try {
                 Packet packet = window.get(seqNum);
                 if (packet != null) {
-                    System.out.println("Timeout for SeqNum " + seqNum + " Packet SeqNum " + packet.getMessages()[0].getSeqNum());
+                    //System.out.println("Timeout for SeqNum " + seqNum + " Packet SeqNum " + packet.getMessages()[0].getSeqNum());
                     sendPacket(packet.getMessages(), packet.getNbMessages(), packet.getReceiver(), false);
                     startTimer(seqNum); // Restart the timer
 
@@ -308,7 +302,7 @@ public class Sender extends ActiveHost {
             if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
-            System.out.println("Sender shutdown complete.");
+            //System.out.println("Sender shutdown complete.");
         } catch (Exception e) {
             e.printStackTrace();
         }
