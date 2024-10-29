@@ -1,6 +1,6 @@
-My PID: 32076
+My PID: 16064
 
-From a new terminal type `kill -SIGINT 32076` or `kill -SIGTERM 32076` to stop processing packets
+From a new terminal type `kill -SIGINT 16064` or `kill -SIGTERM 16064` to stop processing packets
 
 My ID: 2
 
@@ -30,45 +30,3 @@ receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
 senders = [Host{id=3, ip='127.0.0.1', port=11003}]
 Broadcasting and delivering messages...
 
-↪ | p2 → p1 : seq n.1
-↪ | p2 → p1 : seq n.2
-↪ | p2 → p1 : seq n.3
-↪ | p2 → p1 : seq n.4
-↪ | p2 → p1 : seq n.5
-↪ | p2 → p1 : seq n.6
-↪ | p2 → p1 : seq n.7
-↪ | p2 → p1 : seq n.8
-↪ | p2 → p1 : seq n.9
-↪ | p2 → p1 : seq n.10
-
-✔ | p2 ← p1 : seq n.8
-
-
-✔ | p2 ← p1 : seq n.7
-
-
-✔ | p2 ← p1 : seq n.4
-
-
-✔ | p2 ← p1 : seq n.6
-
-
-✔ | p2 ← p1 : seq n.1
-
-
-✔ | p2 ← p1 : seq n.10
-
-
-✔ | p2 ← p1 : seq n.9
-
-
-✔ | p2 ← p1 : seq n.5
-
-
-✔ | p2 ← p1 : seq n.3
-
-
-✔ | p2 ← p1 : seq n.2
-
-Immediately stopping network packet processing.
-Writing output.

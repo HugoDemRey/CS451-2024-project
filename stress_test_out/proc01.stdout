@@ -1,6 +1,6 @@
-My PID: 32074
+My PID: 16063
 
-From a new terminal type `kill -SIGINT 32074` or `kill -SIGTERM 32074` to stop processing packets
+From a new terminal type `kill -SIGINT 16063` or `kill -SIGTERM 16063` to stop processing packets
 
 My ID: 1
 
@@ -29,65 +29,4 @@ me = Receiver{id=1, ip='127.0.0.1', port=11001}
 receivers = []
 senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}]
 Broadcasting and delivering messages...
-
-Host 1 is listening on 127.0.0.1/11001
-↩ | p1 ← p3 : seq n.5
-↪ | p1 → p3 : seq n.5
-
-↩ | p1 ← p3 : seq n.7
-↪ | p1 → p3 : seq n.7
-
-↩ | p1 ← p3 : seq n.8
-↪ | p1 → p3 : seq n.8
-
-↩ | p1 ← p3 : seq n.10
-↪ | p1 → p3 : seq n.10
-
-↩ | p1 ← p3 : seq n.2
-↪ | p1 → p3 : seq n.2
-
-↩ | p1 ← p3 : seq n.9
-↪ | p1 → p3 : seq n.9
-
-↩ | p1 ← p3 : seq n.3
-↪ | p1 → p3 : seq n.3
-
-↩ | p1 ← p3 : seq n.4
-↪ | p1 → p3 : seq n.4
-
-↩ | p1 ← p3 : seq n.6
-↪ | p1 → p3 : seq n.6
-
-↩ | p1 ← p2 : seq n.1
-↪ | p1 → p2 : seq n.1
-
-↩ | p1 ← p2 : seq n.8
-↪ | p1 → p2 : seq n.8
-
-↩ | p1 ← p2 : seq n.4
-↪ | p1 → p2 : seq n.4
-
-↩ | p1 ← p2 : seq n.7
-↪ | p1 → p2 : seq n.7
-
-↩ | p1 ← p2 : seq n.9
-↪ | p1 → p2 : seq n.9
-
-↩ | p1 ← p2 : seq n.5
-↪ | p1 → p2 : seq n.5
-
-↩ | p1 ← p2 : seq n.6
-↪ | p1 → p2 : seq n.6
-
-↩ | p1 ← p2 : seq n.10
-↪ | p1 → p2 : seq n.10
-
-↩ | p1 ← p2 : seq n.3
-↪ | p1 → p2 : seq n.3
-
-↩ | p1 ← p3 : seq n.1
-↪ | p1 → p3 : seq n.1
-
-↩ | p1 ← p2 : seq n.2
-↪ | p1 → p2 : seq n.2
 

@@ -49,7 +49,7 @@ echo "Stopped all processes!"
 # Wait y minutes (e.g., 1 minute) for logs to be written
 echo ""
 echo "Waiting for logs to be written..."
-sleep 10  # 10 seconds
+sleep 5  # 10 seconds
 
 # Kill network setup script
 echo ""

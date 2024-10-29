@@ -20,7 +20,9 @@ public class Main {
         System.out.println("Immediately stopping network packet processing.");
 
         //write/flush output file if necessary
-        me.flushOutput();
+        if (me != null) {
+            me.flushOutput();
+        }
         System.out.println("Writing output.");
     }
 

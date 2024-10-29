@@ -27,7 +27,11 @@ public class ActiveHost extends Host {
     }
 
     public void write(String line) {
-        outputWriter.addLine(line);
+        try {
+            outputWriter.addData(line);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void flushOutput() {
