@@ -1,2 +1,101 @@
-Error occurred during initialization of boot layer
-java.lang.IllegalStateException: Module system already initialized
+My PID: 5326
+
+From a new terminal type `kill -SIGINT 5326` or `kill -SIGTERM 5326` to stop processing packets
+
+My ID: 3
+
+List of resolved hosts is:
+==========================
+1
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11001
+
+2
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11002
+
+4
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11004
+
+5
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11005
+
+
+Path to output:
+===============
+/home/dcl/Projects/Distributed_Algorithms/GithubRepository/stress_test_out/proc03.output
+
+Path to config:
+===============
+./../stress_test_out/config
+
+Doing some initialization
+
+me = Sender{id=3, ip='127.0.0.1', port=11003}
+receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
+senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=5, ip='127.0.0.1', port=11005}]
+Broadcasting and delivering messages...
+
+Immediately stopping network packet processing.
+Flushing Buffer
+    Buffer Length: 448
+    Buffer Content:
+        b 29681
+        b 29682
+        b 29683
+        b 29684
+        b 29685
+        b 29686
+        b 29687
+        b 29688
+        b 29689
+        b 29690
+        b 29691
+        b 29692
+        b 29693
+        b 29694
+        b 29695
+        b 29696
+        b 29697
+        b 29698
+        b 29699
+        b 29700
+        b 29701
+        b 29702
+        b 29703
+        b 29704
+        b 29705
+        b 29706
+        b 29707
+        b 29708
+        b 29709
+        b 29710
+        b 29711
+        b 29712
+        b 29713
+        b 29714
+        b 29715
+        b 29716
+        b 29717
+        b 29718
+        b 29719
+        b 29720
+        b 29721
+        b 29722
+        b 29723
+        b 29724
+        b 29725
+        b 29726
+        b 29727
+        b 29728
+        b 29729
+        b 29730
+        b 29731
+        b 29732
+        b 29733
+        b 29734
+        b 29735
+        b 29736
+Writing output.

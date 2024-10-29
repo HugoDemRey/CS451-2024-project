@@ -245,7 +245,6 @@ public class Sender extends ActiveHost {
                 Packet packet = window.get(ackSeqNum);
                 if (packet != null && this.getId() == ackOriginalSenderId) {
                     // Remove the message from the window
-                    //System.out.println("ACK" + ackSeqNum);
                     window.remove(ackSeqNum);
                     // Cancel the timer
                     ScheduledFuture<?> timer = timers.remove(ackSeqNum);

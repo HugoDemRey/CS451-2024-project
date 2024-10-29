@@ -1,6 +1,6 @@
-My PID: 16063
+My PID: 5324
 
-From a new terminal type `kill -SIGINT 16063` or `kill -SIGTERM 16063` to stop processing packets
+From a new terminal type `kill -SIGINT 5324` or `kill -SIGTERM 5324` to stop processing packets
 
 My ID: 1
 
@@ -13,6 +13,14 @@ Human-readable Port: 11002
 3
 Human-readable IP: 127.0.0.1
 Human-readable Port: 11003
+
+4
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11004
+
+5
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11005
 
 
 Path to output:
@@ -27,6 +35,75 @@ Doing some initialization
 
 me = Receiver{id=1, ip='127.0.0.1', port=11001}
 receivers = []
-senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}]
+senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=5, ip='127.0.0.1', port=11005}]
 Broadcasting and delivering messages...
 
+Immediately stopping network packet processing.
+Flushing Buffer
+    Buffer Length: 560
+    Buffer Content:
+        d 3 8217
+        d 3 8218
+        d 3 8219
+        d 3 8220
+        d 3 8221
+        d 3 8222
+        d 3 8223
+        d 3 8224
+        d 3 8305
+        d 3 8306
+        d 3 8307
+        d 3 8308
+        d 3 8309
+        d 3 8310
+        d 3 8311
+        d 3 8312
+        d 3 985
+        d 3 986
+        d 3 987
+        d 3 988
+        d 3 989
+        d 3 990
+        d 3 991
+        d 3 992
+        d 3 1377
+        d 3 1378
+        d 3 1379
+        d 3 1380
+        d 3 1381
+        d 3 1382
+        d 3 1383
+        d 3 1384
+        d 3 1465
+        d 3 1466
+        d 3 1467
+        d 3 1468
+        d 3 1469
+        d 3 1470
+        d 3 1471
+        d 3 1472
+        d 3 1529
+        d 3 1530
+        d 3 1531
+        d 3 1532
+        d 3 1533
+        d 3 1534
+        d 3 1535
+        d 3 1536
+        d 3 1665
+        d 3 1666
+        d 3 1667
+        d 3 1668
+        d 3 1669
+        d 3 1670
+        d 3 1671
+        d 3 1672
+        d 5 121
+        d 5 122
+        d 5 123
+        d 5 124
+        d 5 125
+        d 5 126
+        d 5 127
+        d 5 128
+Writing output.

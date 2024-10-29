@@ -1,6 +1,6 @@
-My PID: 16064
+My PID: 5325
 
-From a new terminal type `kill -SIGINT 16064` or `kill -SIGTERM 16064` to stop processing packets
+From a new terminal type `kill -SIGINT 5325` or `kill -SIGTERM 5325` to stop processing packets
 
 My ID: 2
 
@@ -13,6 +13,14 @@ Human-readable Port: 11001
 3
 Human-readable IP: 127.0.0.1
 Human-readable Port: 11003
+
+4
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11004
+
+5
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11005
 
 
 Path to output:
@@ -27,6 +35,91 @@ Doing some initialization
 
 me = Sender{id=2, ip='127.0.0.1', port=11002}
 receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
-senders = [Host{id=3, ip='127.0.0.1', port=11003}]
+senders = [Host{id=3, ip='127.0.0.1', port=11003}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=5, ip='127.0.0.1', port=11005}]
 Broadcasting and delivering messages...
 
+Immediately stopping network packet processing.
+Flushing Buffer
+    Buffer Length: 392
+    Buffer Content:
+        b 5929
+        b 5930
+        b 5931
+        b 5932
+        b 5933
+        b 5934
+        b 5935
+        b 5936
+        b 5937
+        b 5938
+        b 5939
+        b 5940
+        b 5941
+        b 5942
+        b 5943
+        b 5944
+        b 5945
+        b 5946
+        b 5947
+        b 5948
+        b 5949
+        b 5950
+        b 5951
+        b 5952
+        b 5953
+        b 5954
+        b 5955
+        b 5956
+        b 5957
+        b 5958
+        b 5959
+        b 5960
+        b 5961
+        b 5962
+        b 5963
+        b 5964
+        b 5965
+        b 5966
+        b 5967
+        b 5968
+        b 5969
+        b 5970
+        b 5971
+        b 5972
+        b 5973
+        b 5974
+        b 5975
+        b 5976
+        b 5977
+        b 5978
+        b 5979
+        b 5980
+        b 5981
+        b 5982
+        b 5983
+        b 5984
+        b 5985
+        b 5986
+        b 5987
+        b 5988
+        b 5989
+        b 5990
+        b 5991
+        b 5992
+        b 5993
+        b 5994
+        b 5995
+        b 5996
+        b 5997
+        b 5998
+        b 5999
+        b 6000
+        b 6001
+        b 6002
+        b 6003
+        b 6004
+        b 6005
+        b 6006
+        b 6007
+        b 6008
+Writing output.

@@ -4,4 +4,4 @@
 ./run.sh --id 2 --hosts ./../example/hosts --output ./../example/output/2.output ./../example/configs/perfect-links.config
 ./run.sh --id 3 --hosts ./../example/hosts --output ./../example/output/3.output ./../example/configs/perfect-links.config
 
-python3 stress.py perfect -r ./../template_java/run.sh -l ./../stress_test_out -p 3 -m 10
+python3 stress.py perfect -r ./../template_java/run.sh -l ./../stress_test_out -p 3 -m 2147483647

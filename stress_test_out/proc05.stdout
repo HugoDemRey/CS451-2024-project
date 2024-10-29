@@ -1,0 +1,69 @@
+My PID: 5330
+
+From a new terminal type `kill -SIGINT 5330` or `kill -SIGTERM 5330` to stop processing packets
+
+My ID: 5
+
+List of resolved hosts is:
+==========================
+1
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11001
+
+2
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11002
+
+3
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11003
+
+4
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11004
+
+
+Path to output:
+===============
+/home/dcl/Projects/Distributed_Algorithms/GithubRepository/stress_test_out/proc05.output
+
+Path to config:
+===============
+./../stress_test_out/config
+
+Doing some initialization
+
+me = Sender{id=5, ip='127.0.0.1', port=11005}
+receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
+senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}, Host{id=4, ip='127.0.0.1', port=11004}]
+Broadcasting and delivering messages...
+
+Immediately stopping network packet processing.
+Flushing Buffer
+    Buffer Length: 192
+    Buffer Content:
+        b 24049
+        b 24050
+        b 24051
+        b 24052
+        b 24053
+        b 24054
+        b 24055
+        b 24056
+        b 24057
+        b 24058
+        b 24059
+        b 24060
+        b 24061
+        b 24062
+        b 24063
+        b 24064
+        b 24065
+        b 24066
+        b 24067
+        b 24068
+        b 24069
+        b 24070
+        b 24071
+        b 24072
+Writing output.
