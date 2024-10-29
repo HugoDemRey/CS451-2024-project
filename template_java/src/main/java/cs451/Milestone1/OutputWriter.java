@@ -5,79 +5,62 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 
 public class OutputWriter {
-    private List<String> buffer;
+    private StringBuilder buffer;
+    private BufferedWriter writer;
     private String outputFilePath;
-    private final int MAX_BUFFER_SIZE = 10;
-    private int bufferCount = 0;
+    private final int MAX_BUFFER_SIZE;
 
-    public OutputWriter(String outputFilePath) {
+    public OutputWriter(String outputFilePath, int maxBufferSize) {
         this.outputFilePath = outputFilePath;
-        this.buffer = new ArrayList<>();
+        this.MAX_BUFFER_SIZE = maxBufferSize;
+        this.buffer = new StringBuilder();
     }
 
     /**
-     * Adds a line to the buffer
-     * @param line the line to be added to the buffer
+     * Initializes the writer by creating or clearing the file and opening the BufferedWriter
      */
-    public void addLine(String line) {
-        //String toWrite = line;
+    public void init() throws IOException {
+        Files.deleteIfExists(Paths.get(outputFilePath));
+        Files.createFile(Paths.get(outputFilePath));
+        writer = Files.newBufferedWriter(Paths.get(outputFilePath), StandardOpenOption.APPEND);
+    }
 
-        // try {
-        //     Files.write(Paths.get(outputFilePath), toWrite.getBytes(), StandardOpenOption.APPEND);
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // }
-
-        buffer.add(line);
-        bufferCount++;
-        try {
-            checkBuffer();
-        } catch (IOException e) {
-           e.printStackTrace();
+    /**
+     * Adds a line to the buffer and writes to file if buffer size is exceeded
+     */
+    public void addLine(String line) throws IOException {
+        buffer.append(line).append(System.lineSeparator());
+        if (buffer.length() >= MAX_BUFFER_SIZE) {
+            writeToFile();
         }
     }
     
     /**
-     * Flushes the buffer to the file (forces the buffer to be written to the file)
-     * @throws IOException
+     * Forces any remaining buffer content to be written to file
      */
     public void flush() throws IOException {
-        writeToFile();
-    }
-
-    public void init() throws IOException {
-        try {
-            createOrClearFile(outputFilePath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    private void createOrClearFile(String filePath) throws IOException {
-        Files.deleteIfExists(Paths.get(filePath));
-        Files.createFile(Paths.get(filePath));
-    }
-
-    private void checkBuffer() throws IOException {
-        if (bufferCount >= MAX_BUFFER_SIZE) {
+        if (buffer.length() > 0) {
             writeToFile();
-            bufferCount = 0;
         }
     }
 
-    private void writeToFile() throws IOException {
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath), StandardOpenOption.APPEND)) {
-            for (String line : buffer) {
-                writer.write(line);
-            }
+    /**
+     * Closes the BufferedWriter
+     */
+    public void close() throws IOException {
+        flush();
+        if (writer != null) {
+            writer.close();
         }
-        buffer.clear();
+    }
+
+    /**
+     * Writes the buffer to the file and clears the buffer
+     */
+    private void writeToFile() throws IOException {
+        writer.write(buffer.toString());
+        buffer.setLength(0); // Clear buffer
     }
 }
