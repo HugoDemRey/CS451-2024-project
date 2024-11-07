@@ -34,6 +34,7 @@ public class ActiveHost extends Host {
         }
     }
 
+
     public void flushOutput() {
         try {
             outputWriter.flush();

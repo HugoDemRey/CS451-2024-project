@@ -274,8 +274,7 @@ def main(parser_results):
         # Run the stress test for a fixed duration
         st = StressTest(procs)
 
-        test_time = 10
-
+        test_time = 60
         start_time = time.time()
 
         def print_progress_bar(percentage):

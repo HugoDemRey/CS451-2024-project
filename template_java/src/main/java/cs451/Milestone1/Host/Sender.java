@@ -145,16 +145,20 @@ public class Sender extends ActiveHost {
 
 
     private void adaptSlidingWindow(boolean isAck) {
+
+        if (isAck) TIMEOUT.set(Math.max(STANDARD_TIMEOUT, TIMEOUT.get() - 10));
+        else TIMEOUT.set(Math.min(TIMEOUT.get() + 1, MAX_TIMEOUT));
+        //write(TIMEOUT.get() + "\n");
+
         if (isAck && nbAcks.incrementAndGet() >= windowIncreaseChangeThreshold) {
             nbAcks.set(0);
-
-            WINDOW_SIZE.set(Math.min(WINDOW_SIZE.get() * 2, MAX_PACKET_SIZE_BYTES));
-            TIMEOUT.set(Math.max(STANDARD_TIMEOUT - 200, TIMEOUT.get() - 100));
+            WINDOW_SIZE.set(Math.min(WINDOW_SIZE.get() + 800, MAX_WINDOW_SIZE));
+            write("I : " + WINDOW_SIZE.get() + " | " + TIMEOUT.get() + "\n");
 
         } else if (!isAck && nbUnacks.incrementAndGet() >= windowDecreaseChangeThreshold) {
             nbUnacks.set(0);
-            WINDOW_SIZE.set(Math.max((int) (WINDOW_SIZE.get() / 1.5), STANDARD_WINDOW_SIZE));
-            TIMEOUT.set(Math.min(TIMEOUT.get() + 50, MAX_TIMEOUT));
+            WINDOW_SIZE.set(Math.max((int) (WINDOW_SIZE.get() - 200), STANDARD_WINDOW_SIZE));
+            write("D : " + WINDOW_SIZE.get() + " | " + TIMEOUT.get() + "\n");
         }
 
     }
@@ -215,7 +219,7 @@ public class Sender extends ActiveHost {
                 for (int i = 0; i < nbMessages; i++) {
                     toWriteBuilder.append("b " + messages[i].getContent() + "\n");
                 }
-                write(toWriteBuilder.toString());
+                //write(toWriteBuilder.toString());
                 //System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
             } else {
                 //System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);

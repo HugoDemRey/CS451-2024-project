@@ -1,6 +1,6 @@
-My PID: 30687
+My PID: 19485
 
-From a new terminal type `kill -SIGINT 30687` or `kill -SIGTERM 30687` to stop processing packets
+From a new terminal type `kill -SIGINT 19485` or `kill -SIGTERM 19485` to stop processing packets
 
 My ID: 2
 
@@ -13,14 +13,6 @@ Human-readable Port: 11001
 3
 Human-readable IP: 127.0.0.1
 Human-readable Port: 11003
-
-4
-Human-readable IP: 127.0.0.1
-Human-readable Port: 11004
-
-5
-Human-readable IP: 127.0.0.1
-Human-readable Port: 11005
 
 
 Path to output:
@@ -35,6 +27,6 @@ Doing some initialization
 
 me = Sender{id=2, ip='127.0.0.1', port=11002}
 receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
-senders = [Host{id=3, ip='127.0.0.1', port=11003}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=5, ip='127.0.0.1', port=11005}]
+senders = [Host{id=3, ip='127.0.0.1', port=11003}]
 Broadcasting and delivering messages...
 
