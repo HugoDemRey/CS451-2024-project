@@ -1,6 +1,6 @@
-My PID: 14888
+My PID: 30686
 
-From a new terminal type `kill -SIGINT 14888` or `kill -SIGTERM 14888` to stop processing packets
+From a new terminal type `kill -SIGINT 30686` or `kill -SIGTERM 30686` to stop processing packets
 
 My ID: 1
 
@@ -38,57 +38,3 @@ receivers = []
 senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=5, ip='127.0.0.1', port=11005}]
 Broadcasting and delivering messages...
 
-Immediately stopping network packet processing.
-I was the Receiver.
-Flushing Buffer
-    Buffer Length: 80
-    Buffer Content:
-        d 3 36353
-        d 3 36354
-        d 3 36355
-        d 3 36356
-        d 3 36357
-        d 3 36358
-        d 3 36359
-        d 3 36360
-        d 2 27105
-        d 2 27106
-        d 2 27107
-        d 2 27108
-        d 2 27109
-        d 2 27110
-        d 2 27111
-        d 2 27112
-        d 3 19761
-        d 3 19762
-        d 3 19763
-        d 3 19764
-        d 3 19765
-        d 3 19766
-        d 3 19767
-        d 3 19768
-        d 3 20577
-        d 3 20578
-        d 3 20579
-        d 3 20580
-        d 3 20581
-        d 3 20582
-        d 3 20583
-        d 3 20584
-        d 3 20585
-        d 3 20586
-        d 3 20587
-        d 3 20588
-        d 3 20589
-        d 3 20590
-        d 3 20591
-        d 3 20592
-        d 3 20593
-        d 3 20594
-        d 3 20595
-        d 3 20596
-        d 3 20597
-        d 3 20598
-        d 3 20599
-        d 3 20600
-Writing output.

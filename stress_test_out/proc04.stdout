@@ -1,6 +1,6 @@
-My PID: 14892
+My PID: 30689
 
-From a new terminal type `kill -SIGINT 14892` or `kill -SIGTERM 14892` to stop processing packets
+From a new terminal type `kill -SIGINT 30689` or `kill -SIGTERM 30689` to stop processing packets
 
 My ID: 4
 
@@ -38,9 +38,3 @@ receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
 senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}, Host{id=5, ip='127.0.0.1', port=11005}]
 Broadcasting and delivering messages...
 
-Immediately stopping network packet processing.
-Flushing Buffer
-    Buffer Length: 0
-    Buffer Content:
-        
-Writing output.
