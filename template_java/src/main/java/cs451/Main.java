@@ -19,6 +19,10 @@ public class Main {
         //immediately stop network packet processing
         System.out.println("Immediately stopping network packet processing.");
 
+        if (me instanceof Receiver) {
+            System.out.println("I was the Receiver.");
+        }
+
         //write/flush output file if necessary
         if (me != null) {
             me.flushOutput();

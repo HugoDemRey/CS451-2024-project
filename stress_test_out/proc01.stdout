@@ -1,6 +1,6 @@
-My PID: 5324
+My PID: 14888
 
-From a new terminal type `kill -SIGINT 5324` or `kill -SIGTERM 5324` to stop processing packets
+From a new terminal type `kill -SIGINT 14888` or `kill -SIGTERM 14888` to stop processing packets
 
 My ID: 1
 
@@ -39,71 +39,56 @@ senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', po
 Broadcasting and delivering messages...
 
 Immediately stopping network packet processing.
+I was the Receiver.
 Flushing Buffer
-    Buffer Length: 560
+    Buffer Length: 80
     Buffer Content:
-        d 3 8217
-        d 3 8218
-        d 3 8219
-        d 3 8220
-        d 3 8221
-        d 3 8222
-        d 3 8223
-        d 3 8224
-        d 3 8305
-        d 3 8306
-        d 3 8307
-        d 3 8308
-        d 3 8309
-        d 3 8310
-        d 3 8311
-        d 3 8312
-        d 3 985
-        d 3 986
-        d 3 987
-        d 3 988
-        d 3 989
-        d 3 990
-        d 3 991
-        d 3 992
-        d 3 1377
-        d 3 1378
-        d 3 1379
-        d 3 1380
-        d 3 1381
-        d 3 1382
-        d 3 1383
-        d 3 1384
-        d 3 1465
-        d 3 1466
-        d 3 1467
-        d 3 1468
-        d 3 1469
-        d 3 1470
-        d 3 1471
-        d 3 1472
-        d 3 1529
-        d 3 1530
-        d 3 1531
-        d 3 1532
-        d 3 1533
-        d 3 1534
-        d 3 1535
-        d 3 1536
-        d 3 1665
-        d 3 1666
-        d 3 1667
-        d 3 1668
-        d 3 1669
-        d 3 1670
-        d 3 1671
-        d 3 1672
-        d 5 121
-        d 5 122
-        d 5 123
-        d 5 124
-        d 5 125
-        d 5 126
-        d 5 127
-        d 5 128
+        d 3 36353
+        d 3 36354
+        d 3 36355
+        d 3 36356
+        d 3 36357
+        d 3 36358
+        d 3 36359
+        d 3 36360
+        d 2 27105
+        d 2 27106
+        d 2 27107
+        d 2 27108
+        d 2 27109
+        d 2 27110
+        d 2 27111
+        d 2 27112
+        d 3 19761
+        d 3 19762
+        d 3 19763
+        d 3 19764
+        d 3 19765
+        d 3 19766
+        d 3 19767
+        d 3 19768
+        d 3 20577
+        d 3 20578
+        d 3 20579
+        d 3 20580
+        d 3 20581
+        d 3 20582
+        d 3 20583
+        d 3 20584
+        d 3 20585
+        d 3 20586
+        d 3 20587
+        d 3 20588
+        d 3 20589
+        d 3 20590
+        d 3 20591
+        d 3 20592
+        d 3 20593
+        d 3 20594
+        d 3 20595
+        d 3 20596
+        d 3 20597
+        d 3 20598
+        d 3 20599
+        d 3 20600
 Writing output.

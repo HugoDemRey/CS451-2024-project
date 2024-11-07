@@ -1,6 +1,6 @@
-My PID: 5330
+My PID: 14893
 
-From a new terminal type `kill -SIGINT 5330` or `kill -SIGTERM 5330` to stop processing packets
+From a new terminal type `kill -SIGINT 14893` or `kill -SIGTERM 14893` to stop processing packets
 
 My ID: 5
 
@@ -40,30 +40,7 @@ Broadcasting and delivering messages...
 
 Immediately stopping network packet processing.
 Flushing Buffer
-    Buffer Length: 192
+    Buffer Length: 0
     Buffer Content:
-        b 24049
-        b 24050
-        b 24051
-        b 24052
-        b 24053
-        b 24054
-        b 24055
-        b 24056
-        b 24057
-        b 24058
-        b 24059
-        b 24060
-        b 24061
-        b 24062
-        b 24063
-        b 24064
-        b 24065
-        b 24066
-        b 24067
-        b 24068
-        b 24069
-        b 24070
-        b 24071
-        b 24072
+        
 Writing output.

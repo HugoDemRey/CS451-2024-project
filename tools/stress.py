@@ -373,13 +373,26 @@ def main(parser_results, testConfig):
                 )
             )
 
+        start_time = time.time()
+
         st.run()
         print("StressTest is complete.")
 
         print("Resuming stopped processes.")
         st.continueStoppedProcesses()
 
+        end_time = time.time()
+        
         input("Press `Enter` when all processes have finished processing messages.")
+
+
+        receiverOutputPath = os.path.join(parser_results.logsDir, "proc01.output")
+        with open(receiverOutputPath, "r") as receiverOutputFile:
+            nbDeliveredMessages = len(receiverOutputFile.readlines())
+
+        print("\nTime taken: {:.2f} seconds".format(end_time - start_time))
+        print("Number of delivered messages:", nbDeliveredMessages)
+        print("Average throughput: {:.2f} messages/second\n".format(nbDeliveredMessages / (end_time - start_time)))
 
         unterminated = st.remainingUnterminatedProcesses()
         if unterminated is not None:
@@ -493,9 +506,9 @@ if __name__ == "__main__":
         "concurrency": 8,  # How many threads are interferring with the running processes
         "attempts": 8,  # How many interferring attempts each threads does
         "attemptsDistribution": {  # Probability with which an interferring thread will
-            "STOP": 0.48,  # select an interferring action (make sure they add up to 1)
-            "CONT": 0.48,
-            "TERM": 0.04,
+            "STOP": 0.5,  # select an interferring action (make sure they add up to 1)
+            "CONT": 0.5,
+            "TERM": 0,
         },
     }
 
