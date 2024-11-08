@@ -1,8 +1,8 @@
-My PID: 30285
+My PID: 30288
 
-From a new terminal type `kill -SIGINT 30285` or `kill -SIGTERM 30285` to stop processing packets
+From a new terminal type `kill -SIGINT 30288` or `kill -SIGTERM 30288` to stop processing packets
 
-My ID: 5
+My ID: 6
 
 List of resolved hosts is:
 ==========================
@@ -22,9 +22,9 @@ Human-readable Port: 11003
 Human-readable IP: 127.0.0.1
 Human-readable Port: 11004
 
-6
+5
 Human-readable IP: 127.0.0.1
-Human-readable Port: 11006
+Human-readable Port: 11005
 
 7
 Human-readable IP: 127.0.0.1
@@ -45,7 +45,7 @@ Human-readable Port: 11010
 
 Path to output:
 ===============
-/home/dcl/Projects/Distributed_Algorithms/GithubRepository/stress_test_out/proc05.output
+/home/dcl/Projects/Distributed_Algorithms/GithubRepository/stress_test_out/proc06.output
 
 Path to config:
 ===============
@@ -53,8 +53,8 @@ Path to config:
 
 Doing some initialization
 
-me = Sender{id=5, ip='127.0.0.1', port=11005}
+me = Sender{id=6, ip='127.0.0.1', port=11006}
 receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
-senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=6, ip='127.0.0.1', port=11006}, Host{id=7, ip='127.0.0.1', port=11007}, Host{id=8, ip='127.0.0.1', port=11008}, Host{id=9, ip='127.0.0.1', port=11009}, Host{id=10, ip='127.0.0.1', port=11010}]
+senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=5, ip='127.0.0.1', port=11005}, Host{id=7, ip='127.0.0.1', port=11007}, Host{id=8, ip='127.0.0.1', port=11008}, Host{id=9, ip='127.0.0.1', port=11009}, Host{id=10, ip='127.0.0.1', port=11010}]
 Broadcasting and delivering messages...
 

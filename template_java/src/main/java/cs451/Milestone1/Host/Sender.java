@@ -235,6 +235,10 @@ public class Sender extends ActiveHost {
 
                     computedRTTs.remove(ackSeqNum);
 
+                    // Adapt the sliding window
+                    adaptSlidingWindow(true);
+
+
                     // Remove the message from the window
                     window.remove(ackSeqNum);
                     // Cancel the timer
@@ -244,8 +248,7 @@ public class Sender extends ActiveHost {
                     }
                     //System.out.println("\n✔ | p" + this.getId() + " ← p" + ackSenderId + " : seq n." + ackSeqNum + "\n");
 
-                    // Adapt the sliding window
-                    adaptSlidingWindow(true);
+                    
 
                     synchronized (window) {
                         window.notifyAll();
@@ -272,23 +275,14 @@ public class Sender extends ActiveHost {
 
     }
 
-
-    private AtomicInteger nbUnacks = new AtomicInteger(0);
-    private AtomicInteger nbAcks = new AtomicInteger(0);
-    private final int windowIncreaseChangeThreshold = 100;
-    private final int windowDecreaseChangeThreshold = 100;
-
-
     private void adaptSlidingWindow(boolean isAck) {
 
-        if (isAck && nbAcks.incrementAndGet() >= windowIncreaseChangeThreshold) {
-            nbAcks.set(0);
-            int newWindowSize = (int) (WINDOW_SIZE.get() * 1.1);
+        if (isAck) {
+            int newWindowSize = (int) (WINDOW_SIZE.get() * GROWING_FACTOR);
             WINDOW_SIZE.set(Math.min(newWindowSize, MAX_WINDOW_SIZE));
 
-        } else if (!isAck && nbUnacks.incrementAndGet() >= windowDecreaseChangeThreshold) {
-            nbUnacks.set(0);
-            int newWindowSize = (int) (WINDOW_SIZE.get() * 0.7);
+        } else {
+            int newWindowSize = (int) (WINDOW_SIZE.get() * SHRINKING_FACTOR);
             WINDOW_SIZE.set(Math.max(newWindowSize, MIN_WINDOW_SIZE));
         }
 

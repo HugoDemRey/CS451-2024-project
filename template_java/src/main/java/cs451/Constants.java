@@ -26,7 +26,10 @@ public class Constants {
 
     public static final int STANDARD_WINDOW_SIZE = 750;
     public static final int MIN_WINDOW_SIZE = 250;
-    public static final int MAX_WINDOW_SIZE = 10000;
+    public static final int MAX_WINDOW_SIZE = 25000;
+
+    public static final double GROWING_FACTOR = 1.4;
+    public static final double SHRINKING_FACTOR = 0.6;
 
     public static final int STANDARD_TIMEOUT = 700;
     
