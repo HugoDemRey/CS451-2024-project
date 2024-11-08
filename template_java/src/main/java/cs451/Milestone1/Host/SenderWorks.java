@@ -23,7 +23,7 @@ import cs451.Milestone1.Packet;
 
 import static cs451.Constants.*;
 
-public class Sender extends ActiveHost {
+public class SenderWorks extends ActiveHost {
     private DatagramSocket socket;
     private final BlockingQueue<MessageReceiverPair> messageQueue = new LinkedBlockingQueue<>();
     private final ExecutorService executor = Executors.newFixedThreadPool(2); // One for sending, one for ACKs
@@ -33,8 +33,6 @@ public class Sender extends ActiveHost {
     private static AtomicInteger TIMEOUT = new AtomicInteger(STANDARD_TIMEOUT); // Example timeout in milliseconds
     private final AtomicInteger nextSeqNum = new AtomicInteger(1); // The next sequence number to be used
     private final Map<Integer, Packet> window = new ConcurrentHashMap<>();
-    private final Map<Integer, Long> computedRTTs = new ConcurrentHashMap<>();
-    private long estimatedRTT = STANDARD_TIMEOUT; // actual RTT in milliseconds
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final Map<Integer, ScheduledFuture<?>> timers = new ConcurrentHashMap<>();
 
@@ -134,6 +132,34 @@ public class Sender extends ActiveHost {
         }
     }
 
+
+    private AtomicInteger nbUnacks = new AtomicInteger(0);
+    private AtomicInteger nbAcks = new AtomicInteger(0);
+    private final int windowIncreaseChangeThreshold = 100;
+    private final int windowDecreaseChangeThreshold = 100;
+
+
+
+    private void adaptSlidingWindow(boolean isAck) {
+
+        if (isAck) TIMEOUT.set(Math.max(STANDARD_TIMEOUT, TIMEOUT.get() - 10));
+        else TIMEOUT.set(Math.min(TIMEOUT.get() + 1, MAX_TIMEOUT));
+        //write(TIMEOUT.get() + "\n");
+
+        if (isAck && nbAcks.incrementAndGet() >= windowIncreaseChangeThreshold) {
+            nbAcks.set(0);
+            WINDOW_SIZE.set(Math.min(WINDOW_SIZE.get() + 800, MAX_WINDOW_SIZE));
+            write("I : " + WINDOW_SIZE.get() + " | " + TIMEOUT.get() + "\n");
+
+        } else if (!isAck && nbUnacks.incrementAndGet() >= windowDecreaseChangeThreshold) {
+            nbUnacks.set(0);
+            WINDOW_SIZE.set(Math.max((int) (WINDOW_SIZE.get() - 200), STANDARD_WINDOW_SIZE));
+            write("D : " + WINDOW_SIZE.get() + " | " + TIMEOUT.get() + "\n");
+        }
+
+    }
+
+
     /**
      * Sends a packet containing the message to the specified receiver.
      *
@@ -183,10 +209,6 @@ public class Sender extends ActiveHost {
 
             byte[] packetData = byteBuffer.array();
             DatagramPacket packet = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
-
-            long startTime = System.currentTimeMillis();
-            computedRTTs.put(messages[0].getSeqNum(), startTime);
-
             socket.send(packet);
             if (isFirstTime) {
                 StringBuilder toWriteBuilder = new StringBuilder("");
@@ -213,9 +235,6 @@ public class Sender extends ActiveHost {
                 DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
                 socket.receive(ackPacket);
 
-                long endTime = System.currentTimeMillis();
-
-
                 ByteBuffer byteBuffer = ByteBuffer.wrap(ackPacket.getData(), 0, ackPacket.getLength());
                 int ackSenderId = byteBuffer.getInt();  
                 int ackOriginalSenderId = byteBuffer.getInt();
@@ -224,17 +243,7 @@ public class Sender extends ActiveHost {
                 
                 // Check if the ACK corresponds to a message in the window
                 Packet packet = window.get(ackSeqNum);
-
-
-
                 if (packet != null && this.getId() == ackOriginalSenderId) {
-
-                    // Update the RTT
-                    long startTime = computedRTTs.get(ackSeqNum);
-                    adaptTimeout(endTime - startTime);
-
-                    computedRTTs.remove(ackSeqNum);
-
                     // Remove the message from the window
                     window.remove(ackSeqNum);
                     // Cancel the timer
@@ -257,44 +266,6 @@ public class Sender extends ActiveHost {
         }
     }
 
-    private final double ALPHA = 0.875;
-    private final double BETA = 0.25;
-
-    private void adaptTimeout(long sampleRTT) {
-
-        long smoothedRTT = (long) (ALPHA * estimatedRTT + (1 - ALPHA) * sampleRTT);
-        estimatedRTT = smoothedRTT;
-
-        long deviation = Math.abs(sampleRTT - smoothedRTT);
-        TIMEOUT.set((int) (smoothedRTT + 4 * BETA * deviation));
-
-        write("SampleRTT : " + sampleRTT + " | EstimatedRTT : " + estimatedRTT + " | Deviation : " + deviation + " | Timeout : " + TIMEOUT.get() + " | Window Size : " + WINDOW_SIZE.get() + "\n");
-
-    }
-
-
-    private AtomicInteger nbUnacks = new AtomicInteger(0);
-    private AtomicInteger nbAcks = new AtomicInteger(0);
-    private final int windowIncreaseChangeThreshold = 100;
-    private final int windowDecreaseChangeThreshold = 100;
-
-
-    private void adaptSlidingWindow(boolean isAck) {
-
-        if (isAck && nbAcks.incrementAndGet() >= windowIncreaseChangeThreshold) {
-            nbAcks.set(0);
-            int newWindowSize = (int) (WINDOW_SIZE.get() * 1.1);
-            WINDOW_SIZE.set(Math.min(newWindowSize, MAX_WINDOW_SIZE));
-
-        } else if (!isAck && nbUnacks.incrementAndGet() >= windowDecreaseChangeThreshold) {
-            nbUnacks.set(0);
-            int newWindowSize = (int) (WINDOW_SIZE.get() * 0.7);
-            WINDOW_SIZE.set(Math.max(newWindowSize, MIN_WINDOW_SIZE));
-        }
-
-    }
-
-
     /**
      * Starts a timer for the given sequence number. If the timer expires, the packet is retransmitted.
      *
@@ -306,10 +277,6 @@ public class Sender extends ActiveHost {
                 Packet packet = window.get(seqNum);
                 if (packet != null) {
                     //System.out.println("Timeout for SeqNum " + seqNum + " Packet SeqNum " + packet.getMessages()[0].getSeqNum());
-
-                    // Update the RTT and retransmit the packet
-                    computedRTTs.replace(seqNum, System.currentTimeMillis());
-
                     sendPacket(packet.getMessages(), packet.getNbMessages(), packet.getReceiver(), false);
                     startTimer(seqNum); // Restart the timer
 

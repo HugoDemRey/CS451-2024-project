@@ -1,6 +1,6 @@
-My PID: 19486
+My PID: 12789
 
-From a new terminal type `kill -SIGINT 19486` or `kill -SIGTERM 19486` to stop processing packets
+From a new terminal type `kill -SIGINT 12789` or `kill -SIGTERM 12789` to stop processing packets
 
 My ID: 3
 

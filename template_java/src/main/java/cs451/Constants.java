@@ -23,9 +23,12 @@ public class Constants {
     public static final int MAX_PAYLOAD_SIZE = 65507; // Maximum payload size in bytes (Ipv4 - UDP headers)
     public static final int MAX_MESSAGES_PER_PACKET = 8;
     public static final String ACK = "ACK";
-    public static final int STANDARD_WINDOW_SIZE = 7500;
+
+    public static final int STANDARD_WINDOW_SIZE = 750;
+    public static final int MIN_WINDOW_SIZE = 250;
     public static final int MAX_WINDOW_SIZE = 10000;
+
     public static final int STANDARD_TIMEOUT = 700;
-    public static final int MAX_TIMEOUT = 2500;
+    
     public static final int MAX_BUFFER_SIZE = 1000;
 }
