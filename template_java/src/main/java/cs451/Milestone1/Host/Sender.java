@@ -193,7 +193,7 @@ public class Sender extends ActiveHost {
                 for (int i = 0; i < nbMessages; i++) {
                     toWriteBuilder.append("b " + messages[i].getContent() + "\n");
                 }
-                //write(toWriteBuilder.toString());
+                write(toWriteBuilder.toString());
                 //System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
             } else {
                 //System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
@@ -271,7 +271,7 @@ public class Sender extends ActiveHost {
         long deviation = Math.abs(sampleRTT - smoothedRTT);
         TIMEOUT.set((int) (smoothedRTT + 4 * BETA * deviation));
 
-        write("SampleRTT : " + sampleRTT + " | EstimatedRTT : " + estimatedRTT + " | Deviation : " + deviation + " | Timeout : " + TIMEOUT.get() + " | Window Size : " + WINDOW_SIZE.get() + "\n");
+        //write("SampleRTT : " + sampleRTT + " | EstimatedRTT : " + estimatedRTT + " | Deviation : " + deviation + " | Timeout : " + TIMEOUT.get() + " | Window Size : " + WINDOW_SIZE.get() + "\n");
 
     }
 
