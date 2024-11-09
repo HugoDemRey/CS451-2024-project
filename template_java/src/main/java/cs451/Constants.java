@@ -31,7 +31,7 @@ public class Constants {
     public static final double GROWING_FACTOR = 1.4;
     public static final double SHRINKING_FACTOR = 0.6;
 
-    public static final int STANDARD_TIMEOUT = 700;
+    public static final int STANDARD_TIMEOUT = 750;
     
     public static final int MAX_BUFFER_SIZE = 1000;
 }

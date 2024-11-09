@@ -1,0 +1,110 @@
+My PID: 11675
+
+From a new terminal type `kill -SIGINT 11675` or `kill -SIGTERM 11675` to stop processing packets
+
+My ID: 1
+
+List of resolved hosts is:
+==========================
+2
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11002
+
+3
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11003
+
+4
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11004
+
+5
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11005
+
+
+Path to output:
+===============
+/home/dcl/Projects/Distributed_Algorithms/GithubRepository/stress_test_out/proc01.output
+
+Path to config:
+===============
+./../stress_test_out/config
+
+Doing some initialization
+
+me = Receiver{id=1, ip='127.0.0.1', port=11001}
+receivers = []
+senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=3, ip='127.0.0.1', port=11003}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=5, ip='127.0.0.1', port=11005}]
+Broadcasting and delivering messages...
+
+Immediately stopping network packet processing.
+I was the Receiver.
+Flushing Buffer
+    Buffer Length: 640
+    Buffer Content:
+        d 2 34258
+        d 2 34259
+        d 2 34260
+        d 2 34261
+        d 2 34262
+        d 2 34263
+        d 2 34264
+        d 2 34265
+        d 2 37242
+        d 2 37243
+        d 2 37244
+        d 2 37245
+        d 2 37246
+        d 2 37247
+        d 2 37248
+        d 2 37249
+        d 2 31850
+        d 2 31851
+        d 2 31852
+        d 2 31853
+        d 2 31854
+        d 2 31855
+        d 2 31856
+        d 2 31857
+        d 2 31906
+        d 2 31907
+        d 2 31908
+        d 2 31909
+        d 2 31910
+        d 2 31911
+        d 2 31912
+        d 2 31913
+        d 2 28634
+        d 2 28635
+        d 2 28636
+        d 2 28637
+        d 2 28638
+        d 2 28639
+        d 2 28640
+        d 2 28641
+        d 2 31218
+        d 2 31219
+        d 2 31220
+        d 2 31221
+        d 2 31222
+        d 2 31223
+        d 2 31224
+        d 2 31225
+        d 2 28426
+        d 2 28427
+        d 2 28428
+        d 2 28429
+        d 2 28430
+        d 2 28431
+        d 2 28432
+        d 2 28433
+        d 2 31426
+        d 2 31427
+        d 2 31428
+        d 2 31429
+        d 2 31430
+        d 2 31431
+        d 2 31432
+        d 2 31433
+Writing output.

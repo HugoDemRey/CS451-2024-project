@@ -10,7 +10,7 @@ readonly PERFECT_LINKS_PATH="../example/configs/perfect-links.config"
 readonly THROUGHPUT_PATH="src/main/java/cs451/tests/compute_throughput.py"
 readonly CORRECTNESS_PASS="src/main/java/cs451/tests/verify_correctness.py"
 
-readonly EXEC_TIME=60
+readonly EXEC_TIME=15
 
 # Build the application
 echo ""
@@ -32,8 +32,6 @@ echo "Starting all processes..."
 gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 1 --hosts $HOSTS_PATH --output $OUTPUT_PATH/1.output $PERFECT_LINKS_PATH; exec bash"
 gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 2 --hosts $HOSTS_PATH --output $OUTPUT_PATH/2.output $PERFECT_LINKS_PATH; exec bash"
 gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 3 --hosts $HOSTS_PATH --output $OUTPUT_PATH/3.output $PERFECT_LINKS_PATH; exec bash"
-gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 4 --hosts $HOSTS_PATH --output $OUTPUT_PATH/4.output $PERFECT_LINKS_PATH; exec bash"
-gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 5 --hosts $HOSTS_PATH --output $OUTPUT_PATH/5.output $PERFECT_LINKS_PATH; exec bash"
 echo "Started all processes!"
 
 echo ""

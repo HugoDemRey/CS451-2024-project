@@ -161,21 +161,109 @@ class LatticeAgreementValidation:
 
 
 class StressTest:
-    def __init__(self, procs):
-        self.processesInfo = {logicalPID: ProcessInfo(handle) for logicalPID, handle in procs}
+    def __init__(self, procs, concurrency, attempts, attemptsRatio):
+        self.processes = len(procs)
+        self.processesInfo = dict()
+        for (logicalPID, handle) in procs:
+            self.processesInfo[logicalPID] = ProcessInfo(handle)
+        self.concurrency = concurrency
+        self.attempts = attempts
+        self.attemptsRatio = attemptsRatio
 
-    def run_for_duration(self, duration):
-        start_time = time.time()
-        while time.time() - start_time < duration:
-            time.sleep(0.1)  # Short sleep to allow processes to run smoothly
+        maxTerminatedProcesses = (
+            self.processes // 2
+            if self.processes % 2 == 1
+            else (self.processes - 1) // 2
+        )
+        self.terminatedProcs = AtomicSaturatedCounter(maxTerminatedProcesses)
 
-    def terminate_all_processes(self):
+    def stress(self):
+        selectProc = list(range(1, self.processes + 1))
+        random.shuffle(selectProc)
+
+        selectOp = (
+            [ProcessState.STOPPED] * int(1000 * self.attemptsRatio["STOP"])
+            + [ProcessState.RUNNING] * int(1000 * self.attemptsRatio["CONT"])
+            + [ProcessState.TERMINATED] * int(1000 * self.attemptsRatio["TERM"])
+        )
+        random.shuffle(selectOp)
+
+        successfulAttempts = 0
+        while successfulAttempts < self.attempts:
+            proc = random.choice(selectProc)
+            op = random.choice(selectOp)
+            info = self.processesInfo[proc]
+
+            with info.lock:
+                if ProcessInfo.validStateTransition(info.state, op):
+
+                    if op == ProcessState.TERMINATED:
+                        reserved = self.terminatedProcs.reserve()
+                        if reserved:
+                            selectProc.remove(proc)
+                        else:
+                            continue
+
+                    time.sleep(float(random.randint(50, 500)) / 300.0)
+                    info.handle.send_signal(ProcessInfo.stateToSignal(op))
+                    info.state = op
+                    successfulAttempts += 1
+                    print(
+                        "Sending {} to process {}".format(
+                            ProcessInfo.stateToSignalStr(op), proc
+                        )
+                    )
+
+                    # if op == ProcessState.TERMINATED and proc not in terminatedProcs:
+                    #     if len(terminatedProcs) < maxTerminatedProcesses:
+
+                    #         terminatedProcs.add(proc)
+
+                    # if len(terminatedProcs) == maxTerminatedProcesses:
+                    #     break
+
+    def remainingUnterminatedProcesses(self):
+        remaining = []
+        for pid, info in self.processesInfo.items():
+            with info.lock:
+                if info.state != ProcessState.TERMINATED:
+                    remaining.append(pid)
+
+        return None if len(remaining) == 0 else remaining
+
+    def terminateAllProcesses(self):
         for _, info in self.processesInfo.items():
             with info.lock:
                 if info.state != ProcessState.TERMINATED:
                     if info.state == ProcessState.STOPPED:
-                        info.handle.send_signal(ProcessInfo.stateToSignal(ProcessState.RUNNING))
-                    info.handle.send_signal(ProcessInfo.stateToSignal(ProcessState.TERMINATED))
+                        info.handle.send_signal(
+                            ProcessInfo.stateToSignal(ProcessState.RUNNING)
+                        )
+
+                    info.handle.send_signal(
+                        ProcessInfo.stateToSignal(ProcessState.TERMINATED)
+                    )
+
+        return False
+
+    def continueStoppedProcesses(self):
+        for _, info in self.processesInfo.items():
+            with info.lock:
+                if info.state != ProcessState.TERMINATED:
+                    if info.state == ProcessState.STOPPED:
+                        info.handle.send_signal(
+                            ProcessInfo.stateToSignal(ProcessState.RUNNING)
+                        )
+
+    def run(self):
+        if self.concurrency > 1:
+            threads = [
+                threading.Thread(target=self.stress) for _ in range(self.concurrency)
+            ]
+            [p.start() for p in threads]
+            [p.join() for p in threads]
+        else:
+            self.stress()
 
 
 def startProcesses(processes, runscript, hostsFilePath, configFilePaths, outputDir):
@@ -233,14 +321,14 @@ def startProcesses(processes, runscript, hostsFilePath, configFilePaths, outputD
     return procs
 
 
-def main(parser_results):
+def main(parser_results, testConfig):
     cmd = parser_results.command
     runscript = parser_results.runscript
     logsDir = parser_results.logsDir
     processes = parser_results.processes
 
     if not os.path.isdir(logsDir):
-        raise ValueError(f"Directory `{logsDir}` does not exist")
+        raise ValueError("Directory `{}` does not exist".format(logsDir))
 
     if cmd == "perfect":
         validation = Validation(processes, parser_results.messages)
@@ -256,7 +344,9 @@ def main(parser_results):
         pdv = parser_results.proposals_distinct_values
 
         if pmv > pdv:
-            print("The distinct proposal values must at least as many as the maximum values per proposal")
+            print(
+                "The distinct proposal values must at least as many as the maximum values per proposal"
+            )
             sys.exit(1)
 
         validation = LatticeAgreementValidation(processes, proposals, pmv, pdv)
@@ -265,52 +355,57 @@ def main(parser_results):
         raise ValueError("Unrecognized command")
 
     try:
-        # Start the processes
+        # Start the processes and get their PIDs
         procs = startProcesses(processes, runscript, hostsFile, configFiles, logsDir)
 
-        for logicalPID, procHandle in procs:
-            print(f"Process with logicalPID {logicalPID} has PID {procHandle.pid}")
+        # Create the stress test
+        st = StressTest(
+            procs,
+            testConfig["concurrency"],
+            testConfig["attempts"],
+            testConfig["attemptsDistribution"],
+        )
 
-        # Run the stress test for a fixed duration
-        st = StressTest(procs)
+        for (logicalPID, procHandle) in procs:
+            print(
+                "Process with logicalPID {} has PID {}".format(
+                    logicalPID, procHandle.pid
+                )
+            )
 
-        test_time = 15
-        start_time = time.time()
-
-        def print_progress_bar(percentage):
-            bar_length = 50
-            block = int(round(bar_length * percentage / 100))
-            progress = "#" * block + "-" * (bar_length - block)
-            print(f"\r[{progress}] {percentage:.2f} %", end="\r")
-
-
-        def scheduler():
-            while time.time() - start_time < test_time:
-                elapsed = time.time() - start_time
-                percentage = (elapsed / test_time) * 100
-                print_progress_bar(percentage)
-                time.sleep(test_time / 50)
-
-        scheduler_thread = threading.Thread(target=scheduler)
-        scheduler_thread.start()
-
-        st.run_for_duration(test_time)
-
-        end_time = time.time()
-
-        print_progress_bar(100)
-
-        receiverOutputPath = os.path.join(parser_results.logsDir, "proc01.output")
-        with open(receiverOutputPath, "r") as receiverOutputFile:
-            nbDeliveredMessages = len(receiverOutputFile.readlines())
-
-        print("\nTime taken: {:.2f} seconds".format(end_time - start_time))
-        print("Number of delivered messages:", nbDeliveredMessages)
-        print("Average throughput: {:.2f} messages/second\n".format(nbDeliveredMessages / (end_time - start_time)))
-
+        st.run()
+        print("StressTest is complete.")
 
         print("Resuming stopped processes.")
-        st.terminate_all_processes()
+        st.continueStoppedProcesses()
+
+        input("Press `Enter` when all processes have finished processing messages.")
+
+        unterminated = st.remainingUnterminatedProcesses()
+        if unterminated is not None:
+            st.terminateAllProcesses()
+
+        mutex = threading.Lock()
+
+        def waitForProcess(logicalPID, procHandle, mutex):
+            procHandle.wait()
+
+            with mutex:
+                print(
+                    "Process {} exited with {}".format(
+                        logicalPID, procHandle.returncode
+                    )
+                )
+
+        # Monitor which processes have exited
+        monitors = [
+            threading.Thread(
+                target=waitForProcess, args=(logicalPID, procHandle, mutex)
+            )
+            for (logicalPID, procHandle) in procs
+        ]
+        [p.start() for p in monitors]
+        [p.join() for p in monitors]
 
     finally:
         if procs is not None:
@@ -394,4 +489,14 @@ if __name__ == "__main__":
 
     results = parser.parse_args()
 
-    main(results)
+    testConfig = {
+        "concurrency": 8,  # How many threads are interferring with the running processes
+        "attempts": 8,  # How many interferring attempts each threads does
+        "attemptsDistribution": {  # Probability with which an interferring thread will
+            "STOP": 0.5,  # select an interferring action (make sure they add up to 1)
+            "CONT": 0.5,
+            "TERM": 0,
+        },
+    }
+
+    main(results, testConfig)
