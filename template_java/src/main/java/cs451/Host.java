@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import cs451.Milestone1.OutputWriter;
+import cs451.Milestone1.Host.HostParams;
 
 public class Host {
 
@@ -14,17 +15,17 @@ public class Host {
     private String ip;
     private int port = -1;
 
-    public boolean populate(String idString, String ipString, String portString) {
+    public boolean populate(HostParams hostParams) {
         try {
-            id = Integer.parseInt(idString);
-            String ipTest = InetAddress.getByName(ipString).toString();
+            id = Integer.parseInt(hostParams.id());
+            String ipTest = InetAddress.getByName(hostParams.ip()).toString();
             if (ipTest.startsWith(IP_START_REGEX)) {
                 ip = ipTest.substring(1);
             } else {
                 ip = InetAddress.getByName(ipTest.split(IP_START_REGEX)[0]).getHostAddress();
             }
 
-            port = Integer.parseInt(portString);
+            port = Integer.parseInt(hostParams.port());
             if (port <= 0) {
                 System.err.println("Port in the hosts file must be a positive number!");
                 return false;
@@ -44,15 +45,15 @@ public class Host {
         return true;
     }
 
-    public int getId() {
+    public int id() {
         return id;
     }
 
-    public String getIp() {
+    public String ip() {
         return ip;
     }
 
-    public int getPort() {
+    public int port() {
         return port;
     }
 

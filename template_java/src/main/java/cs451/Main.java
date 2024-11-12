@@ -5,6 +5,7 @@ import java.util.List;
 
 import cs451.Milestone1.Message;
 import cs451.Milestone1.Host.ActiveHost;
+import cs451.Milestone1.Host.HostParams;
 import cs451.Milestone1.Host.Receiver;
 import cs451.Milestone1.Host.Sender;
 import java.io.BufferedReader;
@@ -80,16 +81,16 @@ public class Main {
         for (int i = 0; i < hosts.size(); i++) {
 
             Host host = hosts.get(i);
-            int hostId = host.getId();
+            int hostId = host.id();
 
             // Initializing me as a sender or receiver
             if (hostId == myId) {
                 if (hostId == receiverId) {
                     me = new Receiver();
-                    me.populate(host.getId() + "", host.getIp(), host.getPort() + "", parser.output());
+                    me.populate(new HostParams(host.id() + "", host.ip(), host.port() + ""), parser.output());
                 } else {
                     me = new Sender();
-                    me.populate(host.getId() + "", host.getIp(), host.getPort() + "", parser.output());
+                    me.populate(new HostParams(host.id() + "", host.ip(), host.port() + ""), parser.output());
                 }
                 continue;
             }
@@ -98,9 +99,9 @@ public class Main {
             if (hostId == receiverId) receivers.add(host);
             else senders.add(host);
 
-            System.out.println(host.getId());
-            System.out.println("Human-readable IP: " + host.getIp());
-            System.out.println("Human-readable Port: " + host.getPort());
+            System.out.println(host.id());
+            System.out.println("Human-readable IP: " + host.ip());
+            System.out.println("Human-readable Port: " + host.port());
             System.out.println();
         }
 

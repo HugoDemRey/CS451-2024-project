@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import cs451.Milestone1.Host.HostParams;
+
 public class HostsParser {
 
     private static final String HOSTS_KEY = "--hosts";
@@ -36,7 +38,7 @@ public class HostsParser {
                 }
 
                 Host newHost = new Host();
-                if (!newHost.populate(splits[0], splits[1], splits[2])) {
+                if (!newHost.populate(new HostParams(splits[0], splits[1], splits[2]))) {
                     return false;
                 }
 
@@ -60,7 +62,7 @@ public class HostsParser {
     private boolean checkIdRange() {
         int num = hosts.size();
         for (Host host : hosts) {
-            if (host.getId() < 1 || host.getId() > num) {
+            if (host.id() < 1 || host.id() > num) {
                 System.err.println("Id of a host is not in the right range!");
                 return false;
             }
@@ -80,7 +82,7 @@ public class HostsParser {
     class HostsComparator implements Comparator<Host> {
 
         public int compare(Host a, Host b) {
-            return a.getId() - b.getId();
+            return a.id() - b.id();
         }
 
     }

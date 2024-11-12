@@ -20,8 +20,8 @@ public class Receiver extends ActiveHost {
     private final Message[] messagesReceived = new Message[MAX_MESSAGES_PER_PACKET];
 
     @Override
-    public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
-        boolean result = super.populate(idString, ipString, portString, outputFilePath);
+    public boolean populate(HostParams hostParams, String outputFilePath) {
+        boolean result = super.populate(hostParams, outputFilePath);
         return result;
     }
 
@@ -32,7 +32,7 @@ public class Receiver extends ActiveHost {
     public void listenWithSlidingWindow() {
         DatagramSocket socket = null;
         try {
-            socket = new DatagramSocket(getPort());
+            socket = new DatagramSocket(port());
             byte[] buffer = new byte[MAX_PACKET_SIZE_BYTES];
             //System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
 
@@ -105,7 +105,7 @@ public class Receiver extends ActiveHost {
         try {
             // Create an ACK containing [OriginalSenderId (4)] [senderId (4)] + [ackNum (4)]]
             ByteBuffer ackBuffer = ByteBuffer.allocate(3 * Integer.BYTES);
-            ackBuffer.putInt(this.getId());
+            ackBuffer.putInt(this.id());
             ackBuffer.putInt(originalSenderId);
             ackBuffer.putInt(ackNum);
             byte[] ackData = ackBuffer.array();
@@ -120,9 +120,9 @@ public class Receiver extends ActiveHost {
     @Override
     public String toString() {
         return "Receiver{" +
-                "id=" + getId() +
-                ", ip='" + getIp() + '\'' +
-                ", port=" + getPort() +
+                "id=" + id() +
+                ", ip='" + ip() + '\'' +
+                ", port=" + port() +
                 '}';
     }
 }

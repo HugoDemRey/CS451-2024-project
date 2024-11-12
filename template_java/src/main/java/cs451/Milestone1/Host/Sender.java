@@ -39,8 +39,8 @@ public class Sender extends ActiveHost {
     private final Map<Integer, ScheduledFuture<?>> timers = new ConcurrentHashMap<>();
 
     @Override
-    public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
-        boolean result = super.populate(idString, ipString, portString, outputFilePath);
+    public boolean populate(HostParams hostParams, String outputFilePath) {
+        boolean result = super.populate(hostParams, outputFilePath);
         try {
             socket = new DatagramSocket();
             // Start the consumer thread for sending messages
@@ -145,8 +145,8 @@ public class Sender extends ActiveHost {
     private void sendPacket(Message[] messages, int nbMessages, Host receiver, boolean isFirstTime) {
         try {
 
-            InetAddress receiverAddress = InetAddress.getByName(receiver.getIp());
-            int receiverPort = receiver.getPort();
+            InetAddress receiverAddress = InetAddress.getByName(receiver.ip());
+            int receiverPort = receiver.port();
 
             byte[][] contentBytes = new byte[nbMessages][];
             int[] contentSizeBytes = new int[nbMessages];
@@ -227,7 +227,7 @@ public class Sender extends ActiveHost {
 
 
 
-                if (packet != null && this.getId() == ackOriginalSenderId) {
+                if (packet != null && this.id() == ackOriginalSenderId) {
 
                     // Update the RTT
                     long startTime = computedRTTs.get(ackSeqNum);
@@ -337,9 +337,9 @@ public class Sender extends ActiveHost {
     @Override
     public String toString() {
         return "Sender{" +
-                "id=" + getId() +
-                ", ip='" + getIp() + '\'' +
-                ", port=" + getPort() +
+                "id=" + id() +
+                ", ip='" + ip() + '\'' +
+                ", port=" + port() +
                 '}';
     }
 }

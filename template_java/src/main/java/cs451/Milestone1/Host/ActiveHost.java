@@ -10,8 +10,8 @@ import cs451.Milestone1.OutputWriter;
 public class ActiveHost extends Host {
     private OutputWriter outputWriter;
 
-    public boolean populate(String idString, String ipString, String portString, String outputFilePath) {
-        boolean result = super.populate(idString, ipString, portString);
+    public boolean populate(HostParams hostParams, String outputFilePath) {
+        boolean result = super.populate(hostParams);
         outputWriter = new OutputWriter(outputFilePath);
         initOutputWriter();
         return result;
