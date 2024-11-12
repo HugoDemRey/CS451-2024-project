@@ -1,29 +1,46 @@
-package cs451.Milestone1.Host;
+package cs451.Milestone2;
 
-import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import cs451.Host;
-import cs451.Milestone1.Message;
-import cs451.Milestone1.Pair;
-import cs451.Milestone1.Packet;
-
 import static cs451.Constants.*;
+import cs451.Milestone1.Message;
+import cs451.Milestone1.Packet;
+import cs451.Milestone1.Pair;
 
-public class Sender extends ActiveHost {
+public class PerfectLinks {
+
+    private final Transceiver parentHost;
+    
+    public PerfectLinks(Transceiver parentHost) {
+        this.parentHost = parentHost;
+        // Start the consumer thread for sending messages
+        executor.execute(this::processQueue);
+        // TODO: Change and make one function listen() that listens for both ACKs and incoming messages
+        executor.execute(this::listenForAcks);
+    }
+
+    /* SENDING PART */
+
     private DatagramSocket socket;
     private final BlockingQueue<Pair<Message, Host>> messageQueue = new LinkedBlockingQueue<>();
     private final ExecutorService executor = Executors.newFixedThreadPool(2); // One for sending, one for ACKs
-
-    // Sliding window variables
     private static AtomicInteger WINDOW_SIZE = new AtomicInteger(STANDARD_WINDOW_SIZE); // Example window size
     private static AtomicInteger TIMEOUT = new AtomicInteger(STANDARD_TIMEOUT); // Example timeout in milliseconds
     private final AtomicInteger nextSeqNum = new AtomicInteger(1); // The next sequence number to be used
@@ -32,22 +49,9 @@ public class Sender extends ActiveHost {
     private long estimatedRTT = STANDARD_TIMEOUT; // actual RTT in milliseconds
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final Map<Integer, ScheduledFuture<?>> timers = new ConcurrentHashMap<>();
+    private final double ALPHA = 0.875;
+    private final double BETA = 0.25;
 
-    @Override
-    public boolean populate(HostParams hostParams, String outputFilePath) {
-        boolean result = super.populate(hostParams, outputFilePath);
-        try {
-            socket = new DatagramSocket();
-            // Start the consumer thread for sending messages
-            executor.execute(this::processQueue);
-            // Start the listener thread for receiving ACKs
-            executor.execute(this::listenForAcks);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-        return result;
-    }
 
     /**
      * Adds a message and its receiver to the sending queue.
@@ -163,11 +167,12 @@ public class Sender extends ActiveHost {
              * [contentSize 2 (4 Bytes)]
              * [content2 (contentSize2 Bytes)]
              * ...
-             * [senderId (4 Bytes)]
+             * [originalSenderId (4 Bytes)]
+             * [lastSenderId (4 Bytes)]
              */
 
             // Allocation of the byte buffer
-            ByteBuffer byteBuffer = ByteBuffer.allocate(4*Integer.BYTES + contentTotalSize);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(5*Integer.BYTES + contentTotalSize);
 
             // The sequence number of the packet (used for acks) is the sequence number of the first message
             byteBuffer.putInt(packet.seqNum());
@@ -178,27 +183,15 @@ public class Sender extends ActiveHost {
                 byteBuffer.put(contentBytes[i]);
             }
             byteBuffer.putInt(packet.messages()[0].getSenderId());
+            byteBuffer.putInt(parentHost.id());
 
             byte[] packetData = byteBuffer.array();
-            DatagramPacket packet2 = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
+            DatagramPacket physicalPacket = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
 
             long startTime = System.currentTimeMillis();
             computedRTTs.computeIfAbsent(packet.seqNum(), k -> new ArrayList<Long>());
             computedRTTs.get(packet.seqNum()).add(startTime);
-            socket.send(packet2);
-
-
-            // First time the packet is sent
-            if (sentCount == 0) {
-                StringBuilder toWriteBuilder = new StringBuilder("");
-                for (int i = 0; i < packet.nbMessages(); i++) {
-                    toWriteBuilder.append("b " + packet.messages()[i].getContent() + "\n");
-                }
-                write(toWriteBuilder.toString());
-                //System.out.println("↪ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
-            } else {
-                //System.out.println("⟳ | p" + this.getId() + " → p" + receiver.getId() + " : seq n." + messages[0].getSeqNum() + " | message qty = " + nbMessages);
-            }
+            socket.send(physicalPacket);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -229,14 +222,14 @@ public class Sender extends ActiveHost {
                 int ackSeqNum = byteBuffer.getInt();
                 int sentCount = byteBuffer.getInt();
                 int originalSenderId = byteBuffer.getInt();
-                int lastSenderId = byteBuffer.getInt();  
+                int lastSenderId = byteBuffer.getInt(); // Do not remove
                 
                 // Check if the ACK corresponds to a message in the window
                 Packet packet = window.get(ackSeqNum);
 
 
 
-                if (packet != null && this.id() == originalSenderId) {
+                if (packet != null && parentHost.id() == originalSenderId) {
 
                     // Update the RTT
                     List<Long> rttList = computedRTTs.remove(ackSeqNum);;
@@ -269,9 +262,10 @@ public class Sender extends ActiveHost {
         }
     }
 
-    private final double ALPHA = 0.875;
-    private final double BETA = 0.25;
-
+    /**
+ * Adapt the timeout value based on the sampleRTT.
+ * @param sampleRTT The sample RTT to adapt the timeout value.
+ */
     private void adaptTimeout(long sampleRTT) {
 
         long smoothedRTT = (long) (ALPHA * estimatedRTT + (1 - ALPHA) * sampleRTT);
@@ -283,7 +277,11 @@ public class Sender extends ActiveHost {
         //write("SampleRTT : " + sampleRTT + " | EstimatedRTT : " + estimatedRTT + " | Deviation : " + deviation + " | Timeout : " + TIMEOUT.get() + " | Window Size : " + WINDOW_SIZE.get() + "\n\n");
 
     }
-
+    
+    /**
+     * Adapt the sliding window size based on the ACKs received.
+     * @param isAck Whether the packet was acknowledged.
+     */
     private void adaptSlidingWindow(boolean isAck) {
 
         if (isAck) {
@@ -296,7 +294,6 @@ public class Sender extends ActiveHost {
         }
 
     }
-
 
     /**
      * Starts a timer for the given sequence number. If the timer expires, the packet is retransmitted.
@@ -338,12 +335,106 @@ public class Sender extends ActiveHost {
         }
     }
 
-    @Override
-    public String toString() {
-        return "Sender{" +
-                "id=" + id() +
-                ", ip='" + ip() + '\'' +
-                ", port=" + port() +
-                '}';
+    /* RECEIVING PART */
+
+    /**
+     * Starts listening for incoming messages and sends ACKs accordingly.
+     */
+    public void listen() {
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket(parentHost.port());
+            byte[] buffer = new byte[MAX_PACKET_SIZE_BYTES];
+            //System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
+
+            while (true) {
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+
+                
+                /*
+                * Packet Format : 
+                * [seqNum (4 Bytes)] 
+                * [sentCount (4 Bytes)]
+                * [nbMessages (4 Bytes)]
+                * [contentSize1 (4 Bytes)] 
+                * [content1 (contentSize1 Bytes)]
+                * [contentSize 2 (4 Bytes)]
+                * [content2 (contentSize2 Bytes)]
+                * ...
+                * [originalSenderId (4 Bytes)]
+                * [lastSenderId (4 Bytes)]
+                */
+                
+                
+                // Deserialize Packet
+                ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData(), 0, packet.getLength());
+                int seqNb = byteBuffer.getInt();
+                int sentCount = byteBuffer.getInt();
+                int nbMessages = byteBuffer.getInt();
+
+                byte[][] contentBytes = new byte[nbMessages][];
+                String[] content = new String[nbMessages];
+                for (int i = 0; i < nbMessages; i++) {
+                    int contentSizeBytes = byteBuffer.getInt();
+                    contentBytes[i] = new byte[contentSizeBytes];
+                    byteBuffer.get(contentBytes[i]);
+                    content[i] = new String(contentBytes[i], StandardCharsets.UTF_8);
+                }
+                int originalSenderId = byteBuffer.getInt();
+                int lastSenderId = byteBuffer.getInt();
+                
+                
+                // Send individual ACK regardless of duplication
+                sendAck(socket, packet.getAddress(), packet.getPort(), lastSenderId, seqNb, sentCount);
+
+                for (int i = 0; i < nbMessages; i++) {
+                    parentHost.bebDeliver(lastSenderId, new Message(originalSenderId, content[i]));
+                }
+                
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+                //System.out.println("Receiver socket closed");
+            }
+        }
+    }
+
+    /**
+     * Sends an ACK for a given sender and sequence number.
+     *
+     * @param socket   The DatagramSocket to send the ACK.
+     * @param address  The address of the sender.
+     * @param port     The port of the sender.
+     * @param originalSenderId The ID of the sender.
+     * @param ackNum   The sequence number being acknowledged.
+     */
+    private void sendAck(DatagramSocket socket, InetAddress address, int port, int originalSenderId, int ackNum, int sentCount) {
+        try {
+            /*
+             * ACK Packet Format :
+             * [ackNum (4 Bytes)]
+             * [sentCount (4 Bytes)]
+             * [OriginalSenderId (4 Bytes)] // ID of the original packet sender.
+             * [SenderId (4 Bytes)]
+             */
+
+            // Create the ACK packet
+            ByteBuffer ackBuffer = ByteBuffer.allocate(4 * Integer.BYTES);
+            ackBuffer.putInt(ackNum);
+            ackBuffer.putInt(sentCount);
+            ackBuffer.putInt(originalSenderId);
+            ackBuffer.putInt(parentHost.id());
+
+            byte[] ackData = ackBuffer.array();
+            DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);
+            socket.send(ackPacket);
+            //System.out.println("↪ | p" + this.getId() + " → p" + originalSenderId + " : seq n." + ackNum + "\n");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

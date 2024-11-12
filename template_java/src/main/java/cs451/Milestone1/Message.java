@@ -1,7 +1,6 @@
 package cs451.Milestone1;
 
 public class Message {
-    private int seqNum;
     private int senderId;
     private String content;
 
@@ -11,15 +10,6 @@ public class Message {
     public Message(int senderId, String content) {
         this.senderId = senderId;
         this.content = content;
-    }
-
-    // Getters and Setters
-    public int getSeqNum() {
-        return seqNum;
-    }
-
-    public void setSeqNum(int seqNum) {
-        this.seqNum = seqNum;
     }
 
     public int getSenderId() {
@@ -39,9 +29,20 @@ public class Message {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        Message other = (Message) obj;
+        return this.senderId == other.senderId && this.content.equals(other.content);
+    }
+
+    @Override
     public String toString() {
         return "Message{" +
-                "seqNum=" + seqNum +
                 ", senderId=" + senderId +
                 ", content='" + content + '\'' +
                 '}';

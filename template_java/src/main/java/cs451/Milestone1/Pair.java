@@ -18,4 +18,16 @@ public class Pair <A, B> {
     public B getSecond() {
         return second;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        Pair other = (Pair) obj;
+        return this.first.equals(other.first) && this.second.equals(other.second);
+    }
 }

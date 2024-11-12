@@ -9,15 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-
-import cs451.Milestone1.Message;
-
 import static cs451.Constants.*;
 
 public class Receiver extends ActiveHost {
     // Map to keep track of delivered sequence numbers per sender
     private final Map<Integer, Set<Integer>> deliveredSeqNums = new ConcurrentHashMap<>();
-    private final Message[] messagesReceived = new Message[MAX_MESSAGES_PER_PACKET];
 
     @Override
     public boolean populate(HostParams hostParams, String outputFilePath) {
