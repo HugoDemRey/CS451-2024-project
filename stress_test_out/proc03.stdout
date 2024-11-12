@@ -1,0 +1,157 @@
+My PID: 11677
+
+From a new terminal type `kill -SIGINT 11677` or `kill -SIGTERM 11677` to stop processing packets
+
+My ID: 3
+
+List of resolved hosts is:
+==========================
+1
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11001
+
+2
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11002
+
+4
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11004
+
+5
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11005
+
+
+Path to output:
+===============
+/home/dcl/Projects/Distributed_Algorithms/GithubRepository/stress_test_out/proc03.output
+
+Path to config:
+===============
+./../stress_test_out/config
+
+Doing some initialization
+
+me = Sender{id=3, ip='127.0.0.1', port=11003}
+receivers = [Host{id=1, ip='127.0.0.1', port=11001}]
+senders = [Host{id=2, ip='127.0.0.1', port=11002}, Host{id=4, ip='127.0.0.1', port=11004}, Host{id=5, ip='127.0.0.1', port=11005}]
+Broadcasting and delivering messages...
+
+Immediately stopping network packet processing.
+Flushing Buffer
+    Buffer Length: 896
+    Buffer Content:
+        b 17521
+        b 17522
+        b 17523
+        b 17524
+        b 17525
+        b 17526
+        b 17527
+        b 17528
+        b 17529
+        b 17530
+        b 17531
+        b 17532
+        b 17533
+        b 17534
+        b 17535
+        b 17536
+        b 17537
+        b 17538
+        b 17539
+        b 17540
+        b 17541
+        b 17542
+        b 17543
+        b 17544
+        b 17545
+        b 17546
+        b 17547
+        b 17548
+        b 17549
+        b 17550
+        b 17551
+        b 17552
+        b 17553
+        b 17554
+        b 17555
+        b 17556
+        b 17557
+        b 17558
+        b 17559
+        b 17560
+        b 17561
+        b 17562
+        b 17563
+        b 17564
+        b 17565
+        b 17566
+        b 17567
+        b 17568
+        b 17569
+        b 17570
+        b 17571
+        b 17572
+        b 17573
+        b 17574
+        b 17575
+        b 17576
+        b 17577
+        b 17578
+        b 17579
+        b 17580
+        b 17581
+        b 17582
+        b 17583
+        b 17584
+        b 17585
+        b 17586
+        b 17587
+        b 17588
+        b 17589
+        b 17590
+        b 17591
+        b 17592
+        b 17593
+        b 17594
+        b 17595
+        b 17596
+        b 17597
+        b 17598
+        b 17599
+        b 17600
+        b 17601
+        b 17602
+        b 17603
+        b 17604
+        b 17605
+        b 17606
+        b 17607
+        b 17608
+        b 17609
+        b 17610
+        b 17611
+        b 17612
+        b 17613
+        b 17614
+        b 17615
+        b 17616
+        b 17617
+        b 17618
+        b 17619
+        b 17620
+        b 17621
+        b 17622
+        b 17623
+        b 17624
+        b 17625
+        b 17626
+        b 17627
+        b 17628
+        b 17629
+        b 17630
+        b 17631
+        b 17632
+Writing output.

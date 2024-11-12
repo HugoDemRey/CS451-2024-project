@@ -134,7 +134,7 @@ public class Main {
                 }
                 break;
             case "Receiver":
-                ((Receiver) me).listenWithSlidingWindow();
+                ((Receiver) me).listen();
                 break;
         
             default:
