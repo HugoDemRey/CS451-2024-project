@@ -33,7 +33,7 @@ public class PerfectLinks {
         // Start the consumer thread for sending messages
         executor.execute(this::processQueue);
         // TODO: Change and make one function listen() that listens for both ACKs and incoming messages
-        executor.execute(this::listenForAcks);
+        executor.execute(this::listen);
     }
 
     /* SENDING PART */
@@ -76,15 +76,16 @@ public class PerfectLinks {
             while (true) {
 
                 Pair<Message, Host> firstPair = messageQueue.take(); // Blocks if queue is empty
-                Host receiver = firstPair.getSecond();
+                Host receiver = firstPair.second();
                 Message[] messagesToSend = new Message[MAX_MESSAGES_PER_PACKET];
-                messagesToSend[0] = firstPair.getFirst();
+                messagesToSend[0] = firstPair.first();
                 int nbTreated = 1;
                 // We assume this should not be greater than MAX_PAYLOAD_SIZE
-                int currentPayloadSizeBytes = 5 * Integer.BYTES + messagesToSend[0].getContent().getBytes(StandardCharsets.UTF_8).length;
+                int currentPayloadSizeBytes = Character.BYTES +  5 * Integer.BYTES + messagesToSend[0].getContent().getBytes(StandardCharsets.UTF_8).length;
 
                 /*
                 * Packet Format : 
+                * [packetType (2 Byte)]
                 * [seqNum (4 Bytes)] 
                 * [sentCount (4 Bytes)]
                 * [nbMessages (4 Bytes)]
@@ -101,12 +102,12 @@ public class PerfectLinks {
                     Pair<Message, Host> nextPair = messageQueue.peek();
                     if (nextPair == null) break;
                     
-                    int nextPayloadSizeBytes = Integer.BYTES + nextPair.getFirst().getContent().getBytes(StandardCharsets.UTF_8).length;
-                    if (nextPair.getSecond() != receiver || (currentPayloadSizeBytes + nextPayloadSizeBytes) > MAX_PAYLOAD_SIZE) break;
+                    int nextPayloadSizeBytes = Integer.BYTES + nextPair.first().getContent().getBytes(StandardCharsets.UTF_8).length;
+                    if (nextPair.second() != receiver || (currentPayloadSizeBytes + nextPayloadSizeBytes) > MAX_PAYLOAD_SIZE) break;
 
                     messageQueue.remove();
 
-                    messagesToSend[i] = nextPair.getFirst();
+                    messagesToSend[i] = nextPair.first();
                     currentPayloadSizeBytes += nextPayloadSizeBytes;
                     nbTreated++;
                 }                
@@ -172,9 +173,10 @@ public class PerfectLinks {
              */
 
             // Allocation of the byte buffer
-            ByteBuffer byteBuffer = ByteBuffer.allocate(5*Integer.BYTES + contentTotalSize);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(Character.BYTES + 5*Integer.BYTES + contentTotalSize);
 
             // The sequence number of the packet (used for acks) is the sequence number of the first message
+            byteBuffer.putChar(PACKET_TYPE_CONTENT);
             byteBuffer.putInt(packet.seqNum());
             byteBuffer.putInt(sentCount);
             byteBuffer.putInt(packet.nbMessages());
@@ -200,34 +202,29 @@ public class PerfectLinks {
     /**
      * Listens for ACKs from receivers and updates the sliding window accordingly.
      */
-    private void listenForAcks() {
+    private void handleAck(ByteBuffer buffer) {
         try {
             while (true) {
-                byte[] ackData = new byte[4 * Integer.BYTES]; // [OriginalSenderId (4)] [senderId (4)] + [ackSeqNum (4)]
-                DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length);
-                socket.receive(ackPacket);
 
                 long endTime = System.currentTimeMillis();
-
                 /*
                 * ACK Packet Format :
+                * /!\ ([packetType (1 byte)] - ALREADY READ)
+                *
                 * [ackNum (4 Bytes)]
                 * [sentCount (4 Bytes)]
                 * [OriginalSenderId (4 Bytes)] // ID of the original packet sender.
-                * [SenderId (4 Bytes)]
+                * [lastSenderId (4 Bytes)]
                 */
 
                 // Deserialize the ACK packet
-                ByteBuffer byteBuffer = ByteBuffer.wrap(ackPacket.getData(), 0, ackPacket.getLength());
-                int ackSeqNum = byteBuffer.getInt();
-                int sentCount = byteBuffer.getInt();
-                int originalSenderId = byteBuffer.getInt();
-                int lastSenderId = byteBuffer.getInt(); // Do not remove
+                int ackSeqNum = buffer.getInt();
+                int sentCount = buffer.getInt();
+                int originalSenderId = buffer.getInt();
+                int lastSenderId = buffer.getInt(); // Do not remove
                 
                 // Check if the ACK corresponds to a message in the window
                 Packet packet = window.get(ackSeqNum);
-
-
 
                 if (packet != null && parentHost.id() == originalSenderId) {
 
@@ -340,67 +337,50 @@ public class PerfectLinks {
     /**
      * Starts listening for incoming messages and sends ACKs accordingly.
      */
-    public void listen() {
-        DatagramSocket socket = null;
-        try {
-            socket = new DatagramSocket(parentHost.port());
-            byte[] buffer = new byte[MAX_PACKET_SIZE_BYTES];
-            //System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
-
-            while (true) {
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
+    public void handleIncomingMessage(ByteBuffer buffer, DatagramPacket packet) {
 
                 
-                /*
-                * Packet Format : 
-                * [seqNum (4 Bytes)] 
-                * [sentCount (4 Bytes)]
-                * [nbMessages (4 Bytes)]
-                * [contentSize1 (4 Bytes)] 
-                * [content1 (contentSize1 Bytes)]
-                * [contentSize 2 (4 Bytes)]
-                * [content2 (contentSize2 Bytes)]
-                * ...
-                * [originalSenderId (4 Bytes)]
-                * [lastSenderId (4 Bytes)]
-                */
-                
-                
-                // Deserialize Packet
-                ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData(), 0, packet.getLength());
-                int seqNb = byteBuffer.getInt();
-                int sentCount = byteBuffer.getInt();
-                int nbMessages = byteBuffer.getInt();
+        /*
+        * Packet Format : 
+        * ( /!\ [packet_type (1 Byte)] ALREADY READ)
+        *
+        * [seqNum (4 Bytes)] 
+        * [sentCount (4 Bytes)]
+        * [nbMessages (4 Bytes)]
+        * [contentSize1 (4 Bytes)] 
+        * [content1 (contentSize1 Bytes)]
+        * [contentSize 2 (4 Bytes)]
+        * [content2 (contentSize2 Bytes)]
+        * ...
+        * [originalSenderId (4 Bytes)]
+        * [lastSenderId (4 Bytes)]
+        */
+        
+        
+        // Deserialize Packet
+        int seqNb = buffer.getInt();
+        int sentCount = buffer.getInt();
+        int nbMessages = buffer.getInt();
 
-                byte[][] contentBytes = new byte[nbMessages][];
-                String[] content = new String[nbMessages];
-                for (int i = 0; i < nbMessages; i++) {
-                    int contentSizeBytes = byteBuffer.getInt();
-                    contentBytes[i] = new byte[contentSizeBytes];
-                    byteBuffer.get(contentBytes[i]);
-                    content[i] = new String(contentBytes[i], StandardCharsets.UTF_8);
-                }
-                int originalSenderId = byteBuffer.getInt();
-                int lastSenderId = byteBuffer.getInt();
-                
-                
-                // Send individual ACK regardless of duplication
-                sendAck(socket, packet.getAddress(), packet.getPort(), lastSenderId, seqNb, sentCount);
-
-                for (int i = 0; i < nbMessages; i++) {
-                    parentHost.bebDeliver(lastSenderId, new Message(originalSenderId, content[i]));
-                }
-                
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-                //System.out.println("Receiver socket closed");
-            }
+        byte[][] contentBytes = new byte[nbMessages][];
+        String[] content = new String[nbMessages];
+        for (int i = 0; i < nbMessages; i++) {
+            int contentSizeBytes = buffer.getInt();
+            contentBytes[i] = new byte[contentSizeBytes];
+            buffer.get(contentBytes[i]);
+            content[i] = new String(contentBytes[i], StandardCharsets.UTF_8);
         }
+        int originalSenderId = buffer.getInt();
+        int lastSenderId = buffer.getInt();
+        
+        
+        // Send individual ACK regardless of duplication
+        sendAck(socket, packet.getAddress(), packet.getPort(), lastSenderId, seqNb, sentCount);
+
+        for (int i = 0; i < nbMessages; i++) {
+            parentHost.bebDeliver(lastSenderId, new Message(originalSenderId, content[i]));
+        }
+                
     }
 
     /**
@@ -423,7 +403,8 @@ public class PerfectLinks {
              */
 
             // Create the ACK packet
-            ByteBuffer ackBuffer = ByteBuffer.allocate(4 * Integer.BYTES);
+            ByteBuffer ackBuffer = ByteBuffer.allocate(Character.BYTES + 4 * Integer.BYTES);
+            ackBuffer.putChar(PACKET_TYPE_ACK);
             ackBuffer.putInt(ackNum);
             ackBuffer.putInt(sentCount);
             ackBuffer.putInt(originalSenderId);
@@ -437,4 +418,58 @@ public class PerfectLinks {
             e.printStackTrace();
         }
     }
+
+    /* COMMON PART */
+
+    /**
+     * Can be multi-threaded to improve performance.
+     */
+    private void listen() {
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket(parentHost.port());
+            byte[] buffer = new byte[MAX_PACKET_SIZE_BYTES];
+            //System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
+
+            while (true) {
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+
+                /* ACK Packet Format :
+                * 
+                * [packetType (2 Bytes)] 'A'
+                * ...
+                */
+                
+                /* Packet Format : 
+                *
+                * [packetType (2 Byte)] 'M'
+                * ...
+                */
+                
+                
+                // Deserialize Packet
+                ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData(), 0, packet.getLength());
+
+                char packetType = byteBuffer.getChar();
+                switch (packetType) {
+                    case PACKET_TYPE_ACK:
+                        handleAck(byteBuffer);
+                        break;
+                    case PACKET_TYPE_CONTENT:
+                        handleIncomingMessage(byteBuffer, packet);
+                        break;
+                }
+                
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+                //System.out.println("Receiver socket closed");
+            }
+        }
+    }
+
 }

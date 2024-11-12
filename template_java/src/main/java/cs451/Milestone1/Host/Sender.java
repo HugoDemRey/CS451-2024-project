@@ -72,9 +72,9 @@ public class Sender extends ActiveHost {
             while (true) {
 
                 Pair<Message, Host> firstPair = messageQueue.take(); // Blocks if queue is empty
-                Host receiver = firstPair.getSecond();
+                Host receiver = firstPair.second();
                 Message[] messagesToSend = new Message[MAX_MESSAGES_PER_PACKET];
-                messagesToSend[0] = firstPair.getFirst();
+                messagesToSend[0] = firstPair.first();
                 int nbTreated = 1;
                 // We assume this should not be greater than MAX_PAYLOAD_SIZE
                 int currentPayloadSizeBytes = 5 * Integer.BYTES + messagesToSend[0].getContent().getBytes(StandardCharsets.UTF_8).length;
@@ -97,12 +97,12 @@ public class Sender extends ActiveHost {
                     Pair<Message, Host> nextPair = messageQueue.peek();
                     if (nextPair == null) break;
                     
-                    int nextPayloadSizeBytes = Integer.BYTES + nextPair.getFirst().getContent().getBytes(StandardCharsets.UTF_8).length;
-                    if (nextPair.getSecond() != receiver || (currentPayloadSizeBytes + nextPayloadSizeBytes) > MAX_PAYLOAD_SIZE) break;
+                    int nextPayloadSizeBytes = Integer.BYTES + nextPair.first().getContent().getBytes(StandardCharsets.UTF_8).length;
+                    if (nextPair.second() != receiver || (currentPayloadSizeBytes + nextPayloadSizeBytes) > MAX_PAYLOAD_SIZE) break;
 
                     messageQueue.remove();
 
-                    messagesToSend[i] = nextPair.getFirst();
+                    messagesToSend[i] = nextPair.first();
                     currentPayloadSizeBytes += nextPayloadSizeBytes;
                     nbTreated++;
                 }                

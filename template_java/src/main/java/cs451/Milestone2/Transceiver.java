@@ -8,7 +8,6 @@ import java.util.Set;
 
 import cs451.Host;
 import cs451.Milestone1.Message;
-import cs451.Milestone1.Pair;
 import cs451.Milestone1.Host.ActiveHost;
 import cs451.Milestone1.Host.HostParams;
 
@@ -16,9 +15,9 @@ public class Transceiver extends ActiveHost {
 
     List<Host> hosts;
 
-    Set<Message> delivered; // <HostId, Message>
-    Set<Pair<Integer, Message>> pending;
-    Map<Message, Set<Integer>> acks;
+    Set<Message> delivered;
+    Set<Message> pending;
+    Map<Message, Set<Integer>> acks; // <Message, Set<hostIds>>
 
     PerfectLinks perfectLinks;
 
@@ -41,7 +40,7 @@ public class Transceiver extends ActiveHost {
     /* URB BROADCAST */
 
     public void urbBroadcast(Message m) {
-        pending.add(new Pair<>(this.id(), m));
+        pending.add(m);
 
         String broadcastString = "b " + m.getContent() + "\n";
         write(broadcastString);
@@ -64,13 +63,23 @@ public class Transceiver extends ActiveHost {
 
     public void bebDeliver(int lastSenderId, Message m) {
         acks.get(m).add(lastSenderId);
-        Pair<Integer, Message> pair = new Pair<>(lastSenderId, m);
-        if (!pending.contains(pair)) {
-            pending.add(pair);
+        if (!pending.contains(m)) {
+            pending.add(m);
             bebBroadcast(m);
         }
     }
 
+    /** Run it every X second(s) on another thread */
+    public void checkPending() {
+        Set<Message> toRemove = new HashSet<>();
+        for (Message m : pending) {
+            if (canDeliver(m)) {
+                urbDeliver(m);
+                toRemove.add(m);
+            }
+        }
+        pending.removeAll(toRemove);
+    }
 
 
     /* URB CRASH (To Change) */
