@@ -408,14 +408,14 @@ public class PerfectLinks {
         // Send individual ACK regardless of duplication
         sendAck(socket, packet.getAddress(), packet.getPort(), lastSenderId, seqNb, sentCount);
 
-        // System.out.print("R | p" + parentHost.id() + " ← p" + lastSenderId + " : seq n." + seqNb);
-        // System.out.print(" - Packet Content = [");
+        //System.out.print("R | p" + parentHost.id() + " ← p" + lastSenderId + " : seq n." + seqNb);
+        //System.out.print(" - Packet Content = [");
         for (int i = 0; i < nbMessages; i++) {
             Message message = new Message(initiatorHostId, content[i]);
-            // System.out.print(" " + message + " ");
+            //System.out.print(" " + message + " ");
             parentHost.bebDeliver(lastSenderId, message);
         }
-        // System.out.print("]\n\n");
+        //System.out.print("]\n\n");
                 
     }
 
