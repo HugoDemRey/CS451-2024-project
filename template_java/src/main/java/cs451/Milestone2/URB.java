@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import cs451.Host;
 import cs451.Milestone1.Message;
@@ -20,8 +22,8 @@ public class URB extends ActiveHost {
     List<Host> hosts;
 
     Set<Message> delivered;
-    Set<Message> pending;
-    Map<Message, Set<Integer>> acks; // <Message, Set<hostIds>>
+    ConcurrentSkipListSet<Message> pending;
+    ConcurrentHashMap<Message, ConcurrentSkipListSet<Integer>> acks; // <Message, Set<hostIds>>
 
     PerfectLinks perfectLinks;
 
@@ -36,8 +38,8 @@ public class URB extends ActiveHost {
 
     public void init() {
         delivered = new HashSet<>();
-        pending = new HashSet<>();
-        acks = new HashMap<>();
+        pending = new ConcurrentSkipListSet<>();
+        acks = new ConcurrentHashMap<>();
         perfectLinks = new PerfectLinks(this);
 
         // Start checking for pending messages
@@ -60,13 +62,15 @@ public class URB extends ActiveHost {
 
         String broadcastString = "b " + m.getContent() + "\n";
         write(broadcastString);
+
+        System.out.println("Broadcasting message: " + m.getContent());
         bebBroadcast(m);
     }
 
     public void bebBroadcast(Message m) {
         for (Host h : hosts) {
             if (h.id() == id()) {
-                acks.computeIfAbsent(m, k -> new HashSet<>());
+                acks.computeIfAbsent(m, k -> new ConcurrentSkipListSet<>());
                 acks.get(m).add(id());
                 continue;
             }
@@ -78,38 +82,48 @@ public class URB extends ActiveHost {
 
     public void urbDeliver(Message m) {
         if (delivered.contains(m)) return;
+        System.out.println("Delivering " + m.getContent() + " from " + m.getInitiatorId());
         String deliverString = "d " + m.getInitiatorId() + " " + m.getContent() + "\n";
         write(deliverString);
         delivered.add(m);
     }
 
     public void bebDeliver(int lastSenderId, Message m) {
-        acks.computeIfAbsent(m, k -> new HashSet<>());
-        acks.get(m).add(lastSenderId);
-        if (!pending.contains(m)) {
-            pending.add(m);
-            bebBroadcast(m);
+        synchronized (acks) {
+            acks.computeIfAbsent(m, k -> new ConcurrentSkipListSet<>());
+            acks.get(m).add(lastSenderId);
         }
+        synchronized (pending) {
+            if (!pending.contains(m)) {
+                pending.add(m);
+                bebBroadcast(m);
+            }
+        }
+        
     }
 
     /** Run it every X second(s) on another thread */
     public void checkPending() {
-        Set<Message> toRemove = new HashSet<>();
-        for (Message m : pending) {
-            if (canDeliver(m)) {
-                urbDeliver(m);
-                toRemove.add(m);
+        ConcurrentSkipListSet<Message> toRemove = new ConcurrentSkipListSet<>();
+        synchronized (pending) {
+            for (Message m : pending) {
+                if (canDeliver(m)) {
+                    urbDeliver(m);
+                    toRemove.add(m);
+                }
             }
+            pending.removeAll(toRemove);
         }
-        pending.removeAll(toRemove);
     }
 
 
     /* URB CRASH (To Change) */
 
     public boolean canDeliver(Message m) {
-        if (!acks.containsKey(m)) return false;
-        return acks.get(m).size() > hosts.size() / 2;
+        synchronized (acks) {
+            if (!acks.containsKey(m)) return false;
+            return acks.get(m).size() > hosts.size() / 2;
+        }
     }
 
 }

@@ -1,6 +1,6 @@
 package cs451.Milestone1;
 
-public class Message {
+public class Message implements Comparable<Message>{
     private int initiatorId;
     private String content;
 
@@ -51,5 +51,10 @@ public class Message {
                 "senderId=" + initiatorId +
                 ", content='" + content + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Message o) {
+        return Integer.compare(this.initiatorId, o.initiatorId);
     }
 }
