@@ -1,5 +1,6 @@
 package cs451.Milestone2;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,7 +12,10 @@ import cs451.Milestone1.Message;
 import cs451.Milestone1.Host.ActiveHost;
 import cs451.Milestone1.Host.HostParams;
 
-public class Transceiver extends ActiveHost {
+/**
+ * Uniform Reliable Broadcast
+ */
+public class URB extends ActiveHost {
 
     List<Host> hosts;
 
@@ -35,6 +39,18 @@ public class Transceiver extends ActiveHost {
         pending = new HashSet<>();
         acks = new HashMap<>();
         perfectLinks = new PerfectLinks(this);
+
+        // Start checking for pending messages
+        new Thread(() -> {
+            while (true) {
+                checkPending();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     /* URB BROADCAST */
@@ -49,6 +65,11 @@ public class Transceiver extends ActiveHost {
 
     public void bebBroadcast(Message m) {
         for (Host h : hosts) {
+            if (h.id() == id()) {
+                acks.computeIfAbsent(m, k -> new HashSet<>());
+                acks.get(m).add(id());
+                continue;
+            }
             perfectLinks.enqueueMessage(m, h);
         }
     }
@@ -56,12 +77,14 @@ public class Transceiver extends ActiveHost {
     /* URB DELIVER */
 
     public void urbDeliver(Message m) {
-        String deliverString = "d " + m.getSenderId() + " " + m.getContent() + "\n";
+        if (delivered.contains(m)) return;
+        String deliverString = "d " + m.getInitiatorId() + " " + m.getContent() + "\n";
         write(deliverString);
         delivered.add(m);
     }
 
     public void bebDeliver(int lastSenderId, Message m) {
+        acks.computeIfAbsent(m, k -> new HashSet<>());
         acks.get(m).add(lastSenderId);
         if (!pending.contains(m)) {
             pending.add(m);
@@ -85,6 +108,7 @@ public class Transceiver extends ActiveHost {
     /* URB CRASH (To Change) */
 
     public boolean canDeliver(Message m) {
+        if (!acks.containsKey(m)) return false;
         return acks.get(m).size() > hosts.size() / 2;
     }
 

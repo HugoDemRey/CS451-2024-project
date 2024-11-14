@@ -8,27 +8,27 @@ import cs451.Milestone1.Host.ActiveHost;
 import cs451.Milestone1.Host.HostParams;
 import cs451.Milestone1.Host.Receiver;
 import cs451.Milestone1.Host.Sender;
-import cs451.Milestone2.URB;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class Main {
+public class MainMilestone1 {
 
-    static URB me;
+    static ActiveHost me;
 
     private static void handleSignal() {
         //immediately stop network packet processing
         System.out.println("Immediately stopping network packet processing.");
 
+        if (me instanceof Receiver) {
+            System.out.println("I was the Receiver.");
+        }
+
         //write/flush output file if necessary
-        System.out.println("Writing output.");
         if (me != null) {
             me.flushOutput();
         }
-        System.out.println("Output Written.");
-
+        System.out.println("Writing output.");
     }
 
     private static void initSignalHandlers() {
@@ -58,16 +58,24 @@ public class Main {
         
         // Implement the logic here from config file
         int nbMessagesPerSender = -1;
+        int receiverId = -1;
         int myId = parser.myId();
-        // Read the configuration file to get nbMessagesPerSender
+        // Read the configuration file to get nbMessagesPerSender and receiverId
         try (BufferedReader br = new BufferedReader(new FileReader(parser.config()))) {
             String line = br.readLine();
-            nbMessagesPerSender = Integer.parseInt(line);
+            if (line != null) {
+                String[] parts = line.split(" ");
+                nbMessagesPerSender = Integer.parseInt(parts[0]);
+                receiverId = Integer.parseInt(parts[1]);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         // We only keep a list of Hosts and not Senders or Receivers, our current host does not need to access functions, we just need data.
+        List<Host> receivers = new ArrayList<>();
+        List<Host> senders = new ArrayList<>();
+
         
         List<Host> hosts = parser.hosts();
         for (int i = 0; i < hosts.size(); i++) {
@@ -77,9 +85,19 @@ public class Main {
 
             // Initializing me as a sender or receiver
             if (hostId == myId) {
-                me = new URB();
-                me.populate(new HostParams(host.id() + "", host.ip(), host.port() + ""), parser.output(), hosts);
+                if (hostId == receiverId) {
+                    me = new Receiver();
+                    me.populate(new HostParams(host.id() + "", host.ip(), host.port() + ""), parser.output());
+                } else {
+                    me = new Sender();
+                    me.populate(new HostParams(host.id() + "", host.ip(), host.port() + ""), parser.output());
+                }
+                continue;
             }
+                
+            // Initializing receivers and senders
+            if (hostId == receiverId) receivers.add(host);
+            else senders.add(host);
 
             System.out.println(host.id());
             System.out.println("Human-readable IP: " + host.ip());
@@ -99,13 +117,28 @@ public class Main {
 
         System.out.println("Doing some initialization\n");
         System.out.println("me = " + me);
+        System.out.println("receivers = " + receivers);
+        System.out.println("senders = " + senders);
 
         System.out.println("Broadcasting and delivering messages...\n");
 
-        for (int i = 0; i < nbMessagesPerSender; i++) {
-            String content = (i+1) + "";
-            // String content = java.util.UUID.randomUUID().toString().substring(0, 5); // should work with any string
-            ((URB) me).urbBroadcast(new Message(myId, content));
+
+        String myRole = me instanceof Sender ? "Sender" : "Receiver";
+
+        switch (myRole) {
+            case "Sender":
+                for (int i = 0; i < nbMessagesPerSender; i++) {
+                    String content = (i+1) + "";
+                    // String content = java.util.UUID.randomUUID().toString().substring(0, 5); // should work with any string
+                    ((Sender) me).enqueueMessage(new Message(myId, content), receivers.get(0));
+                }
+                break;
+            case "Receiver":
+                ((Receiver) me).listen();
+                break;
+        
+            default:
+                break;
         }
 
         // After a process finishes broadcasting,

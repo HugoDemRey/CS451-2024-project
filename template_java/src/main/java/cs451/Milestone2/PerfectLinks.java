@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -28,7 +27,7 @@ import cs451.Milestone1.Pair;
 
 public class PerfectLinks {
 
-    private final Transceiver parentHost;
+    private final URB parentHost;
     private DatagramSocket socket;
     private final BlockingQueue<Pair<Message, Host>> messageQueue = new LinkedBlockingQueue<>();
     private final ExecutorService executor = Executors.newFixedThreadPool(2); // One for sending, one for receiving
@@ -43,7 +42,7 @@ public class PerfectLinks {
     private final double ALPHA = 0.875;
     private final double BETA = 0.25;
     
-    public PerfectLinks(Transceiver parentHost) {
+    public PerfectLinks(URB parentHost) {
         this.parentHost = parentHost;
 
         try {
@@ -71,16 +70,14 @@ public class PerfectLinks {
             // All IO exceptions of the class are caught here.
             e.printStackTrace();
         } finally {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-            }
+            // if (socket != null && !socket.isClosed()) {
+            //     socket.close();
+            // }
         }
         
     }
 
     /* SENDING PART */
-
-    
 
 
     /**
@@ -114,17 +111,17 @@ public class PerfectLinks {
                 int currentPayloadSizeBytes = Character.BYTES +  5 * Integer.BYTES + messagesToSend[0].getContent().getBytes(StandardCharsets.UTF_8).length;
 
                 /*
-                * Packet Format : 
-                * [packetType (2 Byte)]
-                * [seqNum (4 Bytes)] 
-                * [sentCount (4 Bytes)]
+                * Physical Packet Format : 
+                * [seqNum (4 Bytes)]
+                * [sentCount (4 Bytes)] 
                 * [nbMessages (4 Bytes)]
                 * [contentSize1 (4 Bytes)] 
                 * [content1 (contentSize1 Bytes)]
                 * [contentSize 2 (4 Bytes)]
                 * [content2 (contentSize2 Bytes)]
                 * ...
-                * [senderId (4 Bytes)]
+                * [originalSenderId (4 Bytes)]
+                * [lastSenderId (4 Bytes)]
                 */
 
 
@@ -175,6 +172,7 @@ public class PerfectLinks {
      */
     private void sendPacket(Packet packet, int sentCount) throws IOException {
 
+
         InetAddress receiverAddress = InetAddress.getByName(packet.receiver().ip());
         int receiverPort = packet.receiver().port();
 
@@ -188,18 +186,18 @@ public class PerfectLinks {
         }
 
         /*
-            * Packet Format : 
-            * [seqNum (4 Bytes)]
-            * [sentCount (4 Bytes)] 
-            * [nbMessages (4 Bytes)]
-            * [contentSize1 (4 Bytes)] 
-            * [content1 (contentSize1 Bytes)]
-            * [contentSize 2 (4 Bytes)]
-            * [content2 (contentSize2 Bytes)]
-            * ...
-            * [originalSenderId (4 Bytes)]
-            * [lastSenderId (4 Bytes)]
-            */
+        * Packet Format : 
+        * [seqNum (4 Bytes)]
+        * [sentCount (4 Bytes)] 
+        * [nbMessages (4 Bytes)]
+        * [contentSize1 (4 Bytes)] 
+        * [content1 (contentSize1 Bytes)]
+        * [contentSize 2 (4 Bytes)]
+        * [content2 (contentSize2 Bytes)]
+        * ...
+        * [originalSenderId (4 Bytes)]
+        * [lastSenderId (4 Bytes)]
+        */
 
         // Allocation of the byte buffer
         ByteBuffer byteBuffer = ByteBuffer.allocate(Character.BYTES + 5*Integer.BYTES + contentTotalSize);
@@ -213,7 +211,7 @@ public class PerfectLinks {
             byteBuffer.putInt(contentSizeBytes[i]);
             byteBuffer.put(contentBytes[i]);
         }
-        byteBuffer.putInt(packet.messages()[0].getSenderId());
+        byteBuffer.putInt(packet.messages()[0].getInitiatorId());
         byteBuffer.putInt(parentHost.id());
 
         byte[] packetData = byteBuffer.array();
@@ -222,67 +220,74 @@ public class PerfectLinks {
         long startTime = System.currentTimeMillis();
         computedRTTs.computeIfAbsent(packet.seqNum(), k -> new ArrayList<Long>());
         computedRTTs.get(packet.seqNum()).add(startTime);
-        socket.send(physicalPacket);
+        // System.out.print("S | p" + parentHost.id() + " → p" + packet.receiver().id() + " : seq n." + packet.seqNum());
+        // System.out.print(" - Packet Content = [");
+        // for (int i = 0; i < packet.nbMessages(); i++) {
+        //     System.out.print(" " + packet.messages()[i] + " ");
+        // }
+        // System.out.print("]\n\n");
 
+        socket.send(physicalPacket);
     }
 
     /**
      * Listens for ACKs from receivers and updates the sliding window accordingly.
      */
     private void handleAck(ByteBuffer buffer) {
-        try {
-            while (true) {
 
-                long endTime = System.currentTimeMillis();
-                /*
-                * ACK Packet Format :
-                * /!\ ([packetType (1 byte)] - ALREADY READ)
-                *
-                * [ackNum (4 Bytes)]
-                * [sentCount (4 Bytes)]
-                * [OriginalSenderId (4 Bytes)] // ID of the original packet sender.
-                * [lastSenderId (4 Bytes)]
-                */
+        long endTime = System.currentTimeMillis();
+        /*
+        * ACK Packet Format :
+        * /!\ ([packetType (1 byte)] - ALREADY READ)
+        *
+        * [ackNum (4 Bytes)]
+        * [sentCount (4 Bytes)]
+        * [OriginalSenderId (4 Bytes)] // ID of the original packet sender.
+        * [lastSenderId (4 Bytes)]
+        */
 
-                // Deserialize the ACK packet
-                int ackSeqNum = buffer.getInt();
-                int sentCount = buffer.getInt();
-                int originalSenderId = buffer.getInt();
-                int lastSenderId = buffer.getInt(); // Do not remove
-                
-                // Check if the ACK corresponds to a message in the window
-                Packet packet = window.get(ackSeqNum);
+        // Deserialize the ACK packet
+        int ackSeqNum = buffer.getInt();
+        int sentCount = buffer.getInt();
+        int originalSenderId = buffer.getInt();
+        int lastSenderId = buffer.getInt(); // Do not remove
+        
 
-                if (packet != null && parentHost.id() == originalSenderId) {
+        // Check if the ACK corresponds to a message in the window
+        Packet packet = window.get(ackSeqNum);
 
-                    // Update the RTT
-                    List<Long> rttList = computedRTTs.remove(ackSeqNum);;
-                    if (rttList != null) {
-                        //write("seqNum : " + ackSeqNum + " packet n." + sentCount + " received.\n");
-                        //write("RTT : " + (endTime - rttList.get(sentCount)) + " list = " + rttList + "\n");
-                        long startTime = rttList.get(sentCount);
-                        adaptTimeout(endTime - startTime);
-                    }
+        if (packet != null && parentHost.id() == originalSenderId) {
 
-                    // Adapt the sliding window
-                    adaptSlidingWindow(true);
-
-                    // Remove the message from the window
-                    window.remove(ackSeqNum);
-                    // Cancel the timer
-                    ScheduledFuture<?> timer = timers.remove(ackSeqNum);
-                    if (timer != null) {
-                        timer.cancel(false);
-                    }
-                    //System.out.println("\n✔ | p" + this.getId() + " ← p" + ackSenderId + " : seq n." + ackSeqNum + "\n");
-
-                    synchronized (window) {
-                        window.notifyAll();
-                    }
-                }
+            // Update the RTT
+            List<Long> rttList = computedRTTs.remove(ackSeqNum);;
+            if (rttList != null) {
+                //write("seqNum : " + ackSeqNum + " packet n." + sentCount + " received.\n");
+                //write("RTT : " + (endTime - rttList.get(sentCount)) + " list = " + rttList + "\n");
+                long startTime = rttList.get(sentCount);
+                adaptTimeout(endTime - startTime);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            // Adapt the sliding window
+            adaptSlidingWindow(true);
+
+            // Remove the message from the window
+            window.remove(ackSeqNum);
+            // Cancel the timer
+            ScheduledFuture<?> timer = timers.remove(ackSeqNum);
+            if (timer != null) {
+                timer.cancel(false);
+            }
+            // System.out.print("\n✔ | p" + parentHost.id() + " ← p" + lastSenderId + " : seq n." + ackSeqNum);
+            // System.out.print(" - Packet Content = [");
+            // for (int i = 0; i < packet.nbMessages(); i++) {
+            //     System.out.print(" " + packet.messages()[i] + " ");
+            // }
+            // System.out.print("]\n\n");
+            
+
+            synchronized (window) {
+                window.notifyAll();
+            }
         }
     }
 
@@ -329,7 +334,6 @@ public class PerfectLinks {
             try {
                 Packet packet = window.get(seqNum);
                 if (packet != null) {
-                    //System.out.println("Timeout for SeqNum " + seqNum + " Packet SeqNum " + packet.getMessages()[0].getSeqNum());
                     sendPacket(packet, sentCount + 1);
                     startTimer(seqNum, sentCount + 1); // Restart the timer
                     // Adapt the sliding window
@@ -353,7 +357,6 @@ public class PerfectLinks {
             if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
-            //System.out.println("Sender shutdown complete.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -379,10 +382,9 @@ public class PerfectLinks {
         * [contentSize 2 (4 Bytes)]
         * [content2 (contentSize2 Bytes)]
         * ...
-        * [originalSenderId (4 Bytes)]
+        * [initiatorHostId (4 Bytes)]
         * [lastSenderId (4 Bytes)]
         */
-        
         
         // Deserialize Packet
         int seqNb = buffer.getInt();
@@ -397,16 +399,23 @@ public class PerfectLinks {
             buffer.get(contentBytes[i]);
             content[i] = new String(contentBytes[i], StandardCharsets.UTF_8);
         }
-        int originalSenderId = buffer.getInt();
+        int initiatorHostId = buffer.getInt();
         int lastSenderId = buffer.getInt();
         
+        
+
         
         // Send individual ACK regardless of duplication
         sendAck(socket, packet.getAddress(), packet.getPort(), lastSenderId, seqNb, sentCount);
 
+        // System.out.print("R | p" + parentHost.id() + " ← p" + lastSenderId + " : seq n." + seqNb);
+        // System.out.print(" - Packet Content = [");
         for (int i = 0; i < nbMessages; i++) {
-            parentHost.bebDeliver(lastSenderId, new Message(originalSenderId, content[i]));
+            Message message = new Message(initiatorHostId, content[i]);
+            // System.out.print(" " + message + " ");
+            parentHost.bebDeliver(lastSenderId, message);
         }
+        // System.out.print("]\n\n");
                 
     }
 
@@ -420,11 +429,13 @@ public class PerfectLinks {
      * @param ackNum   The sequence number being acknowledged.
      */
     private void sendAck(DatagramSocket socket, InetAddress address, int port, int originalSenderId, int ackNum, int sentCount) throws IOException{
+
         /*
             * ACK Packet Format :
+            * [packetType (2 Bytes)] 'A'
             * [ackNum (4 Bytes)]
             * [sentCount (4 Bytes)]
-            * [OriginalSenderId (4 Bytes)] // ID of the original packet sender.
+            * [OriginalSenderId (4 Bytes)] // ID of the broadcaster that waits for the ACK.
             * [SenderId (4 Bytes)]
             */
 
@@ -439,7 +450,6 @@ public class PerfectLinks {
         byte[] ackData = ackBuffer.array();
         DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);
         socket.send(ackPacket);
-        //System.out.println("↪ | p" + this.getId() + " → p" + originalSenderId + " : seq n." + ackNum + "\n");
     }
 
     /* COMMON PART */
@@ -448,10 +458,10 @@ public class PerfectLinks {
      * Can be multi-threaded to improve performance.
      */
     private void listen() throws IOException {
-        byte[] buffer = new byte[MAX_PACKET_SIZE_BYTES];
-        //System.out.println("Host " + getId() + " is listening on " + getIp() + "/" + getPort());
+        
 
         while (true) {
+            byte[] buffer = new byte[MAX_PACKET_SIZE_BYTES];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             socket.receive(packet);
 
@@ -470,8 +480,8 @@ public class PerfectLinks {
             
             // Deserialize Packet
             ByteBuffer byteBuffer = ByteBuffer.wrap(packet.getData(), 0, packet.getLength());
-
             char packetType = byteBuffer.getChar();
+
             switch (packetType) {
                 case PACKET_TYPE_ACK:
                     handleAck(byteBuffer);

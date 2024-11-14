@@ -1,23 +1,23 @@
 package cs451.Milestone1;
 
 public class Message {
-    private int senderId;
+    private int initiatorId;
     private String content;
 
     // Constructors
     public Message() {}
 
-    public Message(int senderId, String content) {
-        this.senderId = senderId;
+    public Message(int initiatorId, String content) {
+        this.initiatorId = initiatorId;
         this.content = content;
     }
 
-    public int getSenderId() {
-        return senderId;
+    public int getInitiatorId() {
+        return initiatorId;
     }
 
-    public void setSenderId(int senderId) {
-        this.senderId = senderId;
+    public void setInitiatorId(int senderId) {
+        this.initiatorId = senderId;
     }
 
     public String getContent() {
@@ -37,13 +37,18 @@ public class Message {
             return false;
         }
         Message other = (Message) obj;
-        return this.senderId == other.senderId && this.content.equals(other.content);
+        return this.initiatorId == other.initiatorId && this.content.equals(other.content);
     }
+
+    @Override
+    public int hashCode() {
+        return this.initiatorId + this.content.hashCode();
+    }    
 
     @Override
     public String toString() {
         return "Message{" +
-                ", senderId=" + senderId +
+                "senderId=" + initiatorId +
                 ", content='" + content + '\'' +
                 '}';
     }

@@ -177,7 +177,7 @@ public class Sender extends ActiveHost {
                 byteBuffer.putInt(contentSizeBytes[i]);
                 byteBuffer.put(contentBytes[i]);
             }
-            byteBuffer.putInt(packet.messages()[0].getSenderId());
+            byteBuffer.putInt(packet.messages()[0].getInitiatorId());
 
             byte[] packetData = byteBuffer.array();
             DatagramPacket packet2 = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
