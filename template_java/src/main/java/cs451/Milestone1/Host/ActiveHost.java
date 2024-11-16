@@ -34,6 +34,14 @@ public class ActiveHost extends Host {
         }
     }
 
+    public void debug(String line) {
+        try {
+            outputWriter.debug( line);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void flushOutput() {
         try {

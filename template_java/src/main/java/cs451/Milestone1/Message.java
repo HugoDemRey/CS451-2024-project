@@ -42,8 +42,8 @@ public class Message implements Comparable<Message>{
 
     @Override
     public int hashCode() {
-        return this.initiatorId + this.content.hashCode();
-    }    
+        return this.content.hashCode();
+    }
 
     @Override
     public String toString() {

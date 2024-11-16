@@ -104,6 +104,7 @@ public class PerfectLinks {
 
                 Pair<Message, Host> firstPair = messageQueue.take(); // Blocks if queue is empty
                 Host receiver = firstPair.second();
+                int initiatorId = firstPair.first().getInitiatorId();
                 Message[] messagesToSend = new Message[MAX_MESSAGES_PER_PACKET];
                 messagesToSend[0] = firstPair.first();
                 int nbTreated = 1;
@@ -130,7 +131,7 @@ public class PerfectLinks {
                     if (nextPair == null) break;
                     
                     int nextPayloadSizeBytes = Integer.BYTES + nextPair.first().getContent().getBytes(StandardCharsets.UTF_8).length;
-                    if (nextPair.second() != receiver || (currentPayloadSizeBytes + nextPayloadSizeBytes) > MAX_PAYLOAD_SIZE) break;
+                    if (nextPair.second() != receiver || nextPair.first().getInitiatorId() != initiatorId || (currentPayloadSizeBytes + nextPayloadSizeBytes) > MAX_PAYLOAD_SIZE) break;
 
                     messageQueue.remove();
 
@@ -180,6 +181,7 @@ public class PerfectLinks {
         int[] contentSizeBytes = new int[packet.nbMessages()];
         int contentTotalSize = 0;
         for (int i = 0; i < packet.nbMessages(); i++) {
+            //parentHost.debug("s " + packet.messages()[i].getInitiatorId() + " " + packet.messages()[i].getContent() + " seqNum: " + packet.seqNum() + "\n");
             contentBytes[i] = packet.messages()[i].getContent().getBytes(StandardCharsets.UTF_8);
             contentSizeBytes[i] = contentBytes[i].length;
             contentTotalSize += Integer.BYTES + contentSizeBytes[i];
@@ -195,7 +197,7 @@ public class PerfectLinks {
         * [contentSize 2 (4 Bytes)]
         * [content2 (contentSize2 Bytes)]
         * ...
-        * [originalSenderId (4 Bytes)]
+        * [messageInitiatorId (4 Bytes)]
         * [lastSenderId (4 Bytes)]
         */
 
@@ -242,6 +244,7 @@ public class PerfectLinks {
         *
         * [ackNum (4 Bytes)]
         * [sentCount (4 Bytes)]
+        * [InitiatorHostId (4 Bytes)]
         * [OriginalSenderId (4 Bytes)] // ID of the original packet sender.
         * [lastSenderId (4 Bytes)]
         */
@@ -249,6 +252,7 @@ public class PerfectLinks {
         // Deserialize the ACK packet
         int ackSeqNum = buffer.getInt();
         int sentCount = buffer.getInt();
+        int initiatorHostId = buffer.getInt();
         int originalSenderId = buffer.getInt();
         int lastSenderId = buffer.getInt(); // Do not remove
         
@@ -257,6 +261,10 @@ public class PerfectLinks {
         Packet packet = window.get(ackSeqNum);
 
         if (packet != null && parentHost.id() == originalSenderId) {
+            
+            // for (int i = 0; i < packet.nbMessages(); i++) {
+            //     parentHost.debug("ACK " + initiatorHostId + " " + packet.messages()[i].getContent() + " seqNum: " + ackSeqNum + "\n");
+            // }
 
             // Update the RTT
             List<Long> rttList = computedRTTs.remove(ackSeqNum);;
@@ -335,6 +343,9 @@ public class PerfectLinks {
                 Packet packet = window.get(seqNum);
                 if (packet != null) {
                     sendPacket(packet, sentCount + 1);
+                    // for (int i = 0; i < packet.nbMessages(); i++) {
+                    //     parentHost.debug("s " + packet.messages()[i].getInitiatorId() + " " + packet.messages()[i].getContent() + " seqNum: " + seqNum + "\n");
+                    // }
                     startTimer(seqNum, sentCount + 1); // Restart the timer
                     // Adapt the sliding window
                     adaptSlidingWindow(false);
@@ -406,13 +417,14 @@ public class PerfectLinks {
 
         
         // Send individual ACK regardless of duplication
-        sendAck(socket, packet.getAddress(), packet.getPort(), lastSenderId, seqNb, sentCount);
+        sendAck(socket, packet.getAddress(), packet.getPort(), initiatorHostId, lastSenderId, seqNb, sentCount);
 
         //System.out.print("R | p" + parentHost.id() + " ← p" + lastSenderId + " : seq n." + seqNb);
         //System.out.print(" - Packet Content = [");
         for (int i = 0; i < nbMessages; i++) {
             Message message = new Message(initiatorHostId, content[i]);
             //System.out.print(" " + message + " ");
+            //parentHost.debug("r " + initiatorHostId + " " + content[i] + " seqNum: " + seqNb + "\n");
             parentHost.bebDeliver(lastSenderId, message);
         }
         //System.out.print("]\n\n");
@@ -428,22 +440,24 @@ public class PerfectLinks {
      * @param originalSenderId The ID of the sender.
      * @param ackNum   The sequence number being acknowledged.
      */
-    private void sendAck(DatagramSocket socket, InetAddress address, int port, int originalSenderId, int ackNum, int sentCount) throws IOException{
+    private void sendAck(DatagramSocket socket, InetAddress address, int port, int initiatorHostId, int originalSenderId, int ackNum, int sentCount) throws IOException{
 
         /*
             * ACK Packet Format :
             * [packetType (2 Bytes)] 'A'
             * [ackNum (4 Bytes)]
             * [sentCount (4 Bytes)]
+            * [InitiatorHostId (4 Bytes)]
             * [OriginalSenderId (4 Bytes)] // ID of the broadcaster that waits for the ACK.
             * [SenderId (4 Bytes)]
             */
 
         // Create the ACK packet
-        ByteBuffer ackBuffer = ByteBuffer.allocate(Character.BYTES + 4 * Integer.BYTES);
+        ByteBuffer ackBuffer = ByteBuffer.allocate(Character.BYTES + 5 * Integer.BYTES);
         ackBuffer.putChar(PACKET_TYPE_ACK);
         ackBuffer.putInt(ackNum);
         ackBuffer.putInt(sentCount);
+        ackBuffer.putInt(initiatorHostId);
         ackBuffer.putInt(originalSenderId);
         ackBuffer.putInt(parentHost.id());
 

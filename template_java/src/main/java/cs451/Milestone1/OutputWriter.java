@@ -22,6 +22,8 @@ public class OutputWriter {
     public void init() throws IOException {
         Files.deleteIfExists(Paths.get(outputFilePath));
         Files.createFile(Paths.get(outputFilePath));
+        Files.deleteIfExists(Paths.get(outputFilePath + ".debug"));
+        Files.createFile(Paths.get(outputFilePath + ".debug"));
     }
 
     /**
@@ -41,6 +43,18 @@ public class OutputWriter {
 
         
     }
+
+    public void debug(String data) {
+        try {
+            BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath + ".debug"), StandardOpenOption.APPEND);
+            writer.write(data);
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("Error writing to debug file");
+            e.printStackTrace();
+        }
+    }
+
     
     /**
      * Forces any remaining buffer content to be written to file
