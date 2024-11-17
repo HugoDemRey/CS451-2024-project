@@ -88,13 +88,14 @@ public class URB extends ActiveHost {
         delivered.add(m);
     }
 
-    int rebroadcasts = 1;
+    int rebroadcasts = 0;
 
     public void bebDeliver(int lastSenderId, Message m) {
         acks.putIfAbsent(m, new HashSet<>());
         boolean neverReceived = acks.get(m).add(lastSenderId);
         
         if (neverReceived && m.getInitiatorId() != id()) {
+            debug(rebroadcasts++ + " rebroadcasts");
             pending.add(m);
             bebBroadcast(m);
         }
