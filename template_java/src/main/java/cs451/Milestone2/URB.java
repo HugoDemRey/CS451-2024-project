@@ -69,7 +69,7 @@ public class URB extends ActiveHost {
 
     public void bebBroadcast(Message m) {
 
-        while (pending.size() >= 1000) {
+        while (pending.size() >= 3000) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
