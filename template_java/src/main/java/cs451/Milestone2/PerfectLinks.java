@@ -221,7 +221,11 @@ public class PerfectLinks {
 
         long startTime = System.currentTimeMillis();
         computedRTTs.computeIfAbsent(packet.seqNum(), k -> new ArrayList<Long>());
-        computedRTTs.get(packet.seqNum()).add(startTime);
+        try {
+            computedRTTs.get(packet.seqNum()).add(startTime);
+        } catch (NullPointerException e) {
+            // can happen if we just removed the packet from the window
+        }
         // System.out.print("S | p" + parentHost.id() + " → p" + packet.receiver().id() + " : seq n." + packet.seqNum());
         // System.out.print(" - Packet Content = [");
         // for (int i = 0; i < packet.nbMessages(); i++) {

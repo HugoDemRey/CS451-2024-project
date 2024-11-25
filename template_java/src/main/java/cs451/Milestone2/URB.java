@@ -1,15 +1,10 @@
 package cs451.Milestone2;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import cs451.Host;
 import cs451.Milestone1.Message;
@@ -63,6 +58,8 @@ public class URB extends ActiveHost {
         pending.add(m);
         acks.put(m, new HashSet<>(List.of(id())));
 
+        debug("Broadcasting message: " + m.getContent() + "\n");
+
         String broadcastString = "b " + m.getContent() + "\n";
         write(broadcastString);
 
@@ -71,6 +68,15 @@ public class URB extends ActiveHost {
     }
 
     public void bebBroadcast(Message m) {
+
+        while (pending.size() >= 1000) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         for (Host h : hosts) {
             if (h.id() == id()) {
                 continue;
@@ -92,10 +98,11 @@ public class URB extends ActiveHost {
 
     public void bebDeliver(int lastSenderId, Message m) {
         acks.putIfAbsent(m, new HashSet<>());
-        boolean neverReceived = acks.get(m).add(lastSenderId);
+        Set<Integer> acksM = acks.get(m);
+        boolean neverReceivedByLastSenderId = acksM.add(lastSenderId);
         
-        if (neverReceived && m.getInitiatorId() != id()) {
-            debug(rebroadcasts++ + " rebroadcasts");
+        if (neverReceivedByLastSenderId && acksM.size() == 1 && m.getInitiatorId() != id()) {
+            debug(rebroadcasts++ + " rebroadcasts\n");
             pending.add(m);
             bebBroadcast(m);
         }
@@ -122,9 +129,8 @@ public class URB extends ActiveHost {
 
     /* URB CRASH (To Change) */
     public boolean canDeliver(Message m) {
-        return true;
-        // if (!acks.containsKey(m)) return false;
-        // return acks.get(m).size() >= (hosts.size() / 2);
+        if (!acks.containsKey(m)) return false;
+        return acks.get(m).size() >= (hosts.size() / 2);
     }
 
 }
