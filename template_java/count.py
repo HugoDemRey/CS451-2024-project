@@ -26,6 +26,3 @@ def count(parent_dir):
         print("\n\nTotal Delivered count = ", end="")
         total_sum = [delivered_count[file] for file in delivered_count]
         print(sum(total_sum))
-            
-
-count('./../example/output/')

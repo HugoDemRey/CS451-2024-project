@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 from tqdm import tqdm
+from count import count
 
 def parse_logs(output_dir):
     """
@@ -37,53 +38,29 @@ def check_creations(broadcast, delivered):
     violations = []
     
     for receiver_id, delivered_messages in delivered.items():
-        for sender_id, seq_num in tqdm(delivered_messages, desc=f"       process {receiver_id}"):
+        for sender_id, seq_num in tqdm(delivered_messages, desc=f"       process {receiver_id}", leave=False):
             if (None, seq_num) not in broadcast.get(sender_id, []):
-                violations.append(f"PL3 Violation: Message {seq_num} delivered by process {receiver_id} was never broadcast by process {sender_id}.")
+                violations.append(f"Violation: Message {seq_num} delivered by process {receiver_id} was never broadcast by process {sender_id}.")
         
-        # Clear the progress bar
-        tqdm.write("\033[K", end='\r')
         if len(violations) == 0:
-            print(f"    🌱 No violation found for process {receiver_id}")
+            print(f"    🌱 No creation found for process {receiver_id}")
         else:
             for violation in violations:
                 print(f"    ⛔ {violation}")
             violations = []
-def count(parent_dir):
 
-    # delivered = {}
-    # broadcast = {}
+def check_correctness(parent_dir):
 
-    # for root, _, files in os.walk(parent_dir):
-    #     number_of_d = len([file for file in files if file.endswith(".output")])
-
-
-    #     for file in files:
-    #         if file.endswith(".output"):
-    #             with open(os.path.join(root, file), 'r') as f:
-
-    #                 content = f.read()
-
-    #                 delivered[file] = []
-    #                 broadcast[file] = []
-
-    #                 for line in content.splitlines():
-    #                     if line.startswith("b "):
-    #                         broadcast[file].append(line)
-    #                     elif line.startswith("d "):
-    #                         delivered[file].append(line)
-
+    count(parent_dir)
 
     broadcast, delivered = parse_logs(parent_dir)
 
-    print(broadcast.keys())
-
-    # Volontary Add a duplicate in broadcast for 1.output
-    broadcast[1].append(broadcast[1][0])
-    
-    for keys in broadcast.keys():
-        print(f"\n{keys} -> ", end="")
-        print(f"[{len(broadcast[keys])} b, {len(delivered[keys])} d]")
+    # Volontary Add a wrong data
+    add_wrong_data: bool = False
+    if (add_wrong_data):
+        print("🚨🚨🚨 WARNING: Manually adding a wrong data 🚨🚨🚨")
+        broadcast[1].append(broadcast[1][0])
+        delivered[3].append(delivered[3][0])
 
     print("\nChecking for duplicate broadcasts:")
 
@@ -96,7 +73,7 @@ def count(parent_dir):
         else :
             print(f"    🌱 No duplicate broadcasts found for {host}")
 
-    print("\nChecking for duplicates delivered:")
+    print("\nChecking for duplicate delivered:")
     for host in delivered.keys():
         setb = set(delivered[host])
         listb = list(delivered[host])
@@ -113,6 +90,6 @@ def count(parent_dir):
     #     for hostB in broadcast.keys():
     #         None
 
-count('./../example/output/')
+check_correctness('./../example/output/')
 
 
