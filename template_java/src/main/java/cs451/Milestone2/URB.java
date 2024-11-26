@@ -23,6 +23,11 @@ public class URB extends ActiveHost {
     ConcurrentHashMap<Message, Set<Integer>> acks; // <Message, Set<hostIds>>
 
     PerfectLinks perfectLinks;
+    FIFO fifo;
+
+    public URB(FIFO fifo) {
+        this.fifo = fifo;
+    }
 
     public boolean populate(HostParams hostParams, String outputFilePath, List<Host> hosts) {
         boolean result = super.populate(hostParams, outputFilePath);
@@ -71,16 +76,13 @@ public class URB extends ActiveHost {
         pending.add(m);
         acks.put(m, new HashSet<>(List.of(id())));
 
-        String broadcastString = "b " + m.getContent() + "\n";
-        write(broadcastString);
-
         //System.out.println("Broadcasting message: " + m.getContent());
         bebBroadcast(m);
     }
 
     public void bebBroadcast(Message m) {
 
-        broadcastSleep(5000);
+        //broadcastSleep(5000);
 
         for (Host h : hosts) {
             if (h.id() == id()) {
@@ -94,9 +96,8 @@ public class URB extends ActiveHost {
 
     public void urbDeliver(Message m) {
         if (delivered.contains(m)) return;
-        String deliverString = "d " + m.getInitiatorId() + " " + m.getContent() + "\n";
-        write(deliverString);
         delivered.add(m);
+        fifo.FIFODeliver(m);
     }
 
     int rebroadcasts = 0;
@@ -107,6 +108,7 @@ public class URB extends ActiveHost {
         boolean neverReceivedByLastSenderId = acksM.add(lastSenderId);
         
         if (neverReceivedByLastSenderId && acksM.size() == 1 && m.getInitiatorId() != id()) {
+            acksM.add(id());
             pending.add(m);
             bebBroadcast(m);
         }
@@ -139,7 +141,7 @@ public class URB extends ActiveHost {
         boolean condition = acks.get(m).size() > (hosts.size() / 2);
 
         if (m.getInitiatorId() == id()) {
-            debug("acks.get(m).size() >= (hosts.size() / 2) = " + acks.get(m).size() + " >= " + (hosts.size() / 2));
+            debug("acks.get(m).size() >= (hosts.size() / 2) = " + acks.get(m).size() + " > " + (hosts.size() / 2));
             if (condition) {
                 debug(" -> " + ++myMessagesDelivered + "\n");
             } else {

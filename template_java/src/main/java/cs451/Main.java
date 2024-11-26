@@ -8,6 +8,7 @@ import cs451.Milestone1.Host.ActiveHost;
 import cs451.Milestone1.Host.HostParams;
 import cs451.Milestone1.Host.Receiver;
 import cs451.Milestone1.Host.Sender;
+import cs451.Milestone2.FIFO;
 import cs451.Milestone2.URB;
 
 import java.io.BufferedReader;
@@ -16,7 +17,7 @@ import java.io.IOException;
 
 public class Main {
 
-    static URB me;
+    static FIFO me;
 
     private static void handleSignal() {
         //immediately stop network packet processing
@@ -77,8 +78,7 @@ public class Main {
 
             // Initializing me as a sender or receiver
             if (hostId == myId) {
-                me = new URB();
-                me.populate(new HostParams(host.id() + "", host.ip(), host.port() + ""), parser.output(), hosts);
+                me = new FIFO(new HostParams(host.id() + "", host.ip(), host.port() + ""), parser.output(), hosts);
             }
 
             System.out.println(host.id());
@@ -105,7 +105,7 @@ public class Main {
         for (int i = 0; i < nbMessagesPerSender; i++) {
             String content = (i+1) + "";
             // String content = java.util.UUID.randomUUID().toString().substring(0, 5); // should work with any string
-            ((URB) me).urbBroadcast(new Message(myId, content));
+            ((FIFO) me).FIFOBroadcast(new Message(myId, content));
         }
 
         // After a process finishes broadcasting,
