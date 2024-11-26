@@ -52,13 +52,24 @@ public class URB extends ActiveHost {
         }).start();
     }
 
+    private void broadcastSleep(int pendingCond) {
+        while (pending.size() >= pendingCond) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     /* URB BROADCAST */
 
     public void urbBroadcast(Message m) {
+
+        broadcastSleep(1500);
+
         pending.add(m);
         acks.put(m, new HashSet<>(List.of(id())));
-
-        debug("Broadcasting message: " + m.getContent() + "\n");
 
         String broadcastString = "b " + m.getContent() + "\n";
         write(broadcastString);
@@ -69,13 +80,7 @@ public class URB extends ActiveHost {
 
     public void bebBroadcast(Message m) {
 
-        while (pending.size() >= 3000) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        broadcastSleep(5000);
 
         for (Host h : hosts) {
             if (h.id() == id()) {
@@ -102,7 +107,6 @@ public class URB extends ActiveHost {
         boolean neverReceivedByLastSenderId = acksM.add(lastSenderId);
         
         if (neverReceivedByLastSenderId && acksM.size() == 1 && m.getInitiatorId() != id()) {
-            debug(rebroadcasts++ + " rebroadcasts\n");
             pending.add(m);
             bebBroadcast(m);
         }
@@ -126,11 +130,23 @@ public class URB extends ActiveHost {
         
     }
 
+    int myMessagesDelivered = 0;
 
     /* URB CRASH (To Change) */
     public boolean canDeliver(Message m) {
         if (!acks.containsKey(m)) return false;
-        return acks.get(m).size() >= (hosts.size() / 2);
+
+        boolean condition = acks.get(m).size() > (hosts.size() / 2);
+
+        if (m.getInitiatorId() == id()) {
+            debug("acks.get(m).size() >= (hosts.size() / 2) = " + acks.get(m).size() + " >= " + (hosts.size() / 2));
+            if (condition) {
+                debug(" -> " + ++myMessagesDelivered + "\n");
+            } else {
+                debug("\n");
+            }
+        }
+        return condition;
     }
 
 }
