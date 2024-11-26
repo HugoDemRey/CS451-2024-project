@@ -24,10 +24,20 @@ import static cs451.Constants.*;
 import cs451.Milestone1.Message;
 import cs451.Milestone1.Packet;
 import cs451.Milestone1.Pair;
+import cs451.Milestone1.Host.HostParams;
 
-public class PerfectLinks {
+/**
+ * The PerfectLinks class is responsible for sending and receiving messages between hosts using the perfect links abstraction.
+ * Properties:
+ *    - PL1 (Reliable delivery): If a correct process p sends a message m to a correct process q, then q eventually delivers m.
+ *    - PL2 (No duplication): No message is delivered more than once.
+ *    - PL3 (No creation): If some process q delivers a message m with sender p, then q has previously sent or received m.
+ * 
+ * All properties are directly handled in this class.
+ */
+public class PerfectLinks extends Host {
 
-    private final URB parentHost;
+    private final URB urb;
     private DatagramSocket socket;
     private final BlockingQueue<Pair<Message, Host>> messageQueue = new LinkedBlockingQueue<>();
     private final ExecutorService executor = Executors.newFixedThreadPool(2); // One for sending, one for receiving
@@ -42,11 +52,13 @@ public class PerfectLinks {
     private final double ALPHA = 0.875;
     private final double BETA = 0.25;
     
-    public PerfectLinks(URB parentHost) {
-        this.parentHost = parentHost;
+    public PerfectLinks(HostParams hostparams, URB urb) {
+
+        super.populate(hostparams);
+        this.urb = urb;
 
         try {
-            socket = new DatagramSocket(parentHost.port());
+            socket = new DatagramSocket(port());
 
             // can go up to 8 threads, here we only use 2.
 
@@ -214,7 +226,7 @@ public class PerfectLinks {
             byteBuffer.put(contentBytes[i]);
         }
         byteBuffer.putInt(packet.messages()[0].getInitiatorId());
-        byteBuffer.putInt(parentHost.id());
+        byteBuffer.putInt(this.id());
 
         byte[] packetData = byteBuffer.array();
         DatagramPacket physicalPacket = new DatagramPacket(packetData, packetData.length, receiverAddress, receiverPort);
@@ -264,7 +276,7 @@ public class PerfectLinks {
         // Check if the ACK corresponds to a message in the window
         Packet packet = window.get(ackSeqNum);
 
-        if (packet != null && parentHost.id() == originalSenderId) {
+        if (packet != null && this.id() == originalSenderId) {
             
             // for (int i = 0; i < packet.nbMessages(); i++) {
             //     parentHost.debug("ACK " + initiatorHostId + " " + packet.messages()[i].getContent() + " seqNum: " + ackSeqNum + "\n");
@@ -429,7 +441,7 @@ public class PerfectLinks {
             Message message = new Message(initiatorHostId, content[i]);
             //System.out.print(" " + message + " ");
             //parentHost.debug("r " + initiatorHostId + " " + content[i] + " seqNum: " + seqNb + "\n");
-            parentHost.bebDeliver(lastSenderId, message);
+            urb.bebDeliver(lastSenderId, message);
         }
         //System.out.print("]\n\n");
                 
@@ -463,7 +475,7 @@ public class PerfectLinks {
         ackBuffer.putInt(sentCount);
         ackBuffer.putInt(initiatorHostId);
         ackBuffer.putInt(originalSenderId);
-        ackBuffer.putInt(parentHost.id());
+        ackBuffer.putInt(this.id());
 
         byte[] ackData = ackBuffer.array();
         DatagramPacket ackPacket = new DatagramPacket(ackData, ackData.length, address, port);

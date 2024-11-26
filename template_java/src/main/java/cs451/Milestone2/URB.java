@@ -8,41 +8,47 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import cs451.Host;
 import cs451.Milestone1.Message;
-import cs451.Milestone1.Host.ActiveHost;
 import cs451.Milestone1.Host.HostParams;
 
 /**
- * Uniform Reliable Broadcast
+ * The URB class is responsible for the Uniform Reliable Broadcast. It is built on top of the PerfectLinks class.
+ * Properties:
+ *     - URB1 (Validity): If a correct process broadcasts a message m, then every correct process eventually delivers m.
+ *     - URB2 (No duplication): No message is delivered more than once.
+ *     - URB3 (No creation): If some process q delivers a message m with sender p, then q has previously sent or received m.
+ *     - URB4 (Uniform Agreement): If a process (can be faulty) delivers a message m with sender p, then every correct process eventually delivers m.
+ * 
+ * URB1, URB2, URB3 are directly fullfilled by PL1, PL2, PL3 from the PerfectLinks class.
+ * URB4 is handled in this class.
+ * 
+ * @implNote The URB class uses the Best-Effort Broadcast (BEB) abstraction to broadcast messages to all hosts.
+ * The creation of an independant BEB class was considered useless in this project. 
  */
-public class URB extends ActiveHost {
+public class URB {
 
     List<Host> hosts;
 
     Set<Message> delivered;
     ConcurrentLinkedQueue<Message> pending;
+
     ConcurrentHashMap<Message, Set<Integer>> acks; // <Message, Set<hostIds>>
 
     PerfectLinks perfectLinks;
     FIFO fifo;
 
-    public URB(FIFO fifo) {
+    public URB(HostParams hostParams, List<Host> hosts, FIFO fifo) {
         this.fifo = fifo;
+        this.hosts = hosts;
+        perfectLinks = new PerfectLinks(hostParams, this);
+        init();
     }
 
-    public boolean populate(HostParams hostParams, String outputFilePath, List<Host> hosts) {
-        boolean result = super.populate(hostParams, outputFilePath);
-        this.hosts = hosts;
-        init();
-        return result;
-    }
 
     /* URB INIT */
-
     public void init() {
         delivered = new HashSet<>();
         pending = new ConcurrentLinkedQueue<>();
         acks = new ConcurrentHashMap<>();
-        perfectLinks = new PerfectLinks(this);
 
         // Start checking for pending messages
         new Thread(() -> {
@@ -74,7 +80,7 @@ public class URB extends ActiveHost {
         broadcastSleep(1500);
 
         pending.add(m);
-        acks.put(m, new HashSet<>(List.of(id())));
+        acks.put(m, new HashSet<>(List.of(perfectLinks.id())));
 
         //System.out.println("Broadcasting message: " + m.getContent());
         bebBroadcast(m);
@@ -82,10 +88,8 @@ public class URB extends ActiveHost {
 
     public void bebBroadcast(Message m) {
 
-        //broadcastSleep(5000);
-
         for (Host h : hosts) {
-            if (h.id() == id()) {
+            if (h.id() == perfectLinks.id()) {
                 continue;
             }
             perfectLinks.enqueueMessage(m, h);
@@ -107,8 +111,8 @@ public class URB extends ActiveHost {
         Set<Integer> acksM = acks.get(m);
         boolean neverReceivedByLastSenderId = acksM.add(lastSenderId);
         
-        if (neverReceivedByLastSenderId && acksM.size() == 1 && m.getInitiatorId() != id()) {
-            acksM.add(id());
+        if (neverReceivedByLastSenderId && acksM.size() == 1 && m.getInitiatorId() != perfectLinks.id()) {
+            acksM.add(perfectLinks.id());
             pending.add(m);
             bebBroadcast(m);
         }
@@ -139,15 +143,6 @@ public class URB extends ActiveHost {
         if (!acks.containsKey(m)) return false;
 
         boolean condition = acks.get(m).size() > (hosts.size() / 2);
-
-        if (m.getInitiatorId() == id()) {
-            debug("acks.get(m).size() >= (hosts.size() / 2) = " + acks.get(m).size() + " > " + (hosts.size() / 2));
-            if (condition) {
-                debug(" -> " + ++myMessagesDelivered + "\n");
-            } else {
-                debug("\n");
-            }
-        }
         return condition;
     }
 

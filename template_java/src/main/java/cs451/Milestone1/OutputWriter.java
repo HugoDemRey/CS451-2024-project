@@ -19,11 +19,14 @@ public class OutputWriter {
     /**
      * Initializes the writer by creating or clearing the file and opening the BufferedWriter
      */
-    public void init() throws IOException {
+    public void init(boolean debugMode) throws IOException {
         Files.deleteIfExists(Paths.get(outputFilePath));
         Files.createFile(Paths.get(outputFilePath));
-        Files.deleteIfExists(Paths.get(outputFilePath + ".debug"));
-        Files.createFile(Paths.get(outputFilePath + ".debug"));
+        if (debugMode) {
+            Files.deleteIfExists(Paths.get(outputFilePath + ".debug"));
+            Files.createFile(Paths.get(outputFilePath + ".debug"));
+        }
+        
     }
 
     /**

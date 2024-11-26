@@ -149,7 +149,7 @@ def check_correctness(parent_dir):
 
     error3 = check_fifo_ordering(broadcast, delivered)
 
-    joke_mod = True
+    joke_mod = False
 
     if (not error1 and not error2 and not error3):
         print("\033[3m")

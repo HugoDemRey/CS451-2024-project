@@ -4,7 +4,7 @@ import cs451.Host;
 import cs451.Milestone1.OutputWriter;
 
 /**
- * An active hosts only possesses an OutputWriter to write the logs in the output file, which is common to the Receiver and Sender Classes. 
+ * An active hosts only possesses an OutputWriter to write the logs in the output file. 
  * The basic Host class only contains data about a host. It is considered "inactive".
  */
 public class ActiveHost extends Host {
@@ -20,7 +20,7 @@ public class ActiveHost extends Host {
 
     private void initOutputWriter() {
         try {
-            outputWriter.init();
+            outputWriter.init(false);
         } catch (Exception e) {
             e.printStackTrace();
         }

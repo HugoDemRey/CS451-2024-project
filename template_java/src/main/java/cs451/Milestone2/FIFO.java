@@ -4,24 +4,33 @@ import java.util.List;
 
 import cs451.Host;
 import cs451.Milestone1.Message;
-import cs451.Milestone1.Host.ActiveHost;
 import cs451.Milestone1.Host.HostParams;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-public class FIFO extends ActiveHost {
+/**
+ * The FIFO class is responsible for the First-In-First-Out ordering of messages. It is built on top of the URB class.
+ * Properties:
+ *     - FRB1 (Validity): If a correct process broadcasts a message m, then every correct process eventually delivers m.
+ *     - FRB2 (No duplication): No message is delivered more than once.
+ *     - FRB3 (No creation): If some process q delivers a message m with sender p, then q has previously sent or received m.
+ *     - FRB4 (Uniform Agreement): If a process (can be faulty) delivers a message m with sender p, then every correct process eventually delivers m.
+ *     - FRB5 (FIFO delivery): If some process broadcasts messages m1 before m2, then no correct process delivers m2 unless it has already delivered m1.
+ * 
+ * FRB1, FRB2, FRB3, FRB4 are directly fullfilled by URB1, URB2, URB3, URB4 from the URB class.
+ * FRB5 is handle in this class.
+ */
+public class FIFO extends ApplicationDelivery {
     URB urb;
     private Map<Integer, PriorityQueue<Message>> pendingMessages = new HashMap<>();
     private Map<Integer, Integer> nextExpected = new HashMap<>();
     
 
-    public FIFO(HostParams hostParams, String outputFilePath, List<Host> hosts) {
-        urb = new URB(this);
-        urb.populate(hostParams, outputFilePath, hosts);
-        this.populate(hostParams, outputFilePath);
+    public FIFO(String outputFilePath, HostParams hostParams, List<Host> hosts) {
+        super(outputFilePath, false);
+        urb = new URB(hostParams, hosts, this);
     }
-
 
     public void FIFOBroadcast(Message m) {
         String broadcastString = "b " + m.getContent() + "\n";
@@ -32,7 +41,7 @@ public class FIFO extends ActiveHost {
 
     /**
      * @note We know that every message that is passed to this function has never been delivered before.
-     * This is because the delering system is handled by the URB class that makes sure that the message is delivered only once.
+     * This is because the delivering system is handled by the URB class that makes sure that the message is delivered only once.
      * However, the goal of this class is to deliver the message in the order that it was broadcasted,
      * which is something that the URB class does not handle.
      * @param m The message to deliver triggered by the URB class.

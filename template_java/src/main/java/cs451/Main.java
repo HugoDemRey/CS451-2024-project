@@ -78,7 +78,7 @@ public class Main {
 
             // Initializing me as a sender or receiver
             if (hostId == myId) {
-                me = new FIFO(new HostParams(host.id() + "", host.ip(), host.port() + ""), parser.output(), hosts);
+                me = new FIFO(parser.output(), new HostParams(host.id() + "", host.ip(), host.port() + ""), hosts);
             }
 
             System.out.println(host.id());
