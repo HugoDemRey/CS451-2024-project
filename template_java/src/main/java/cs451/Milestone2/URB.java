@@ -1,5 +1,8 @@
 package cs451.Milestone2;
 
+import static cs451.Constants.MAX_PENDING_SIZE;
+import static cs451.Constants.PENDING_CHECK_INTERVAL;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,8 +42,8 @@ public class URB {
     public URB(HostParams hostParams, List<Host> hosts, FIFO fifo) {
         this.fifo = fifo;
         this.hosts = hosts;
-        perfectLinks = new PerfectLinks(hostParams, this);
         init();
+        perfectLinks = new PerfectLinks(hostParams, this);
     }
 
 
@@ -55,7 +58,7 @@ public class URB {
             while (true) {
                 checkPending();
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(PENDING_CHECK_INTERVAL);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -77,7 +80,7 @@ public class URB {
 
     public void urbBroadcast(Message m) {
 
-        broadcastSleep(1500);
+        broadcastSleep(MAX_PENDING_SIZE);
 
         pending.add(m);
         acks.put(m, new HashSet<>(List.of(perfectLinks.id())));
@@ -87,6 +90,7 @@ public class URB {
     }
 
     public void bebBroadcast(Message m) {
+
 
         for (Host h : hosts) {
             if (h.id() == perfectLinks.id()) {

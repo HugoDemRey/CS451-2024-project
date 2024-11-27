@@ -3,6 +3,7 @@ from collections import defaultdict
 from tqdm import tqdm
 from count import count
 import time
+import sys
 
 def parse_logs(output_dir):
     """
@@ -129,6 +130,9 @@ def check_fifo_ordering(broadcast, delivered) -> bool:
 
     return error
 
+def print_in_red(text):
+    sys.stdout.write("\033[1m\033[91m{}\033[00m\n".format(text))
+
 def check_correctness(parent_dir):
 
     count(parent_dir)
@@ -138,7 +142,8 @@ def check_correctness(parent_dir):
     # Volontary Add a wrong data
     add_wrong_data: bool = False
     if (add_wrong_data):
-        print("🚨🚨🚨 WARNING: Manually adding a wrong data 🚨🚨🚨")
+        print_in_red("\n🚨🚨🚨 WARNING: Manually adding a wrong data 🚨🚨🚨")
+        print_in_red("Please set the 'add_wrong_data' variable to False in the 'check_correctness' function to have a valid testing program.")
         broadcast[1].append(broadcast[1][0])
         delivered[3].append(delivered[3][0])
 
@@ -153,7 +158,7 @@ def check_correctness(parent_dir):
 
     if (not error1 and not error2 and not error3):
         print("\033[3m")
-        print("\n🎉 Hurray All correctness properties satisfied!")
+        print("\n🎉 Hurray! All correctness properties satisfied!")
         if (joke_mod): little_j_1()
         print("\033[0m")
     else:
