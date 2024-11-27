@@ -1,23 +1,23 @@
 package cs451.Milestone1;
 
 public class Message implements Comparable<Message>{
-    private int initiatorId;
+    private int signature;
     private String content;
 
     // Constructors
     public Message() {}
 
-    public Message(int initiatorId, String content) {
-        this.initiatorId = initiatorId;
+    public Message(int signature, String content) {
+        this.signature = signature;
         this.content = content;
     }
 
-    public int getInitiatorId() {
-        return initiatorId;
+    public int getSignature() {
+        return signature;
     }
 
-    public void setInitiatorId(int senderId) {
-        this.initiatorId = senderId;
+    public void setSignature(int senderId) {
+        this.signature = senderId;
     }
 
     public String getContent() {
@@ -37,7 +37,7 @@ public class Message implements Comparable<Message>{
             return false;
         }
         Message other = (Message) obj;
-        return this.initiatorId == other.initiatorId && this.content.equals(other.content);
+        return this.signature == other.signature && this.content.equals(other.content);
     }
 
     @Override
@@ -48,13 +48,13 @@ public class Message implements Comparable<Message>{
     @Override
     public String toString() {
         return "Message{" +
-                "senderId=" + initiatorId +
+                "senderId=" + signature +
                 ", content='" + content + '\'' +
                 '}';
     }
 
     @Override
     public int compareTo(Message o) {
-        return Integer.compare(this.initiatorId, o.initiatorId);
+        return Integer.compare(this.signature, o.signature);
     }
 }

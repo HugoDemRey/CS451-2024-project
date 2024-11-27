@@ -111,7 +111,7 @@ public class URB {
         Set<Integer> acksM = acks.get(m);
         boolean neverReceivedByLastSenderId = acksM.add(lastSenderId);
         
-        if (neverReceivedByLastSenderId && acksM.size() == 1 && m.getInitiatorId() != perfectLinks.id()) {
+        if (neverReceivedByLastSenderId && acksM.size() == 1 && m.getSignature() != perfectLinks.id()) {
             acksM.add(perfectLinks.id());
             pending.add(m);
             bebBroadcast(m);

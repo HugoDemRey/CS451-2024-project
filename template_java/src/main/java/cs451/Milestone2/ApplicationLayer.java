@@ -9,10 +9,10 @@ import cs451.Milestone1.OutputWriter;
  * @implNote This class uses the OutputWriter class to write the logs in the output file. 
  * It has been created to avoid the commuinication layet to handle exceptions and to keep the code clean.
  */
-public class ApplicationDelivery {
+public class ApplicationLayer {
     OutputWriter outputWriter;
 
-    public ApplicationDelivery(String outputFilePath, boolean debugMode) {
+    public ApplicationLayer(String outputFilePath, boolean debugMode) {
         outputWriter = new OutputWriter(outputFilePath);
         initOutputWriter(debugMode);
     }
@@ -35,6 +35,14 @@ public class ApplicationDelivery {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void deliver(int hostId, String content) {
+        write("d " + hostId + " " + content + "\n");
+    }
+
+    public void broadcast(String content) {
+        write("b " + content + "\n");
     }
 
     public void debug(String line) {

@@ -21,21 +21,20 @@ import java.util.PriorityQueue;
  * FRB1, FRB2, FRB3, FRB4 are directly fullfilled by URB1, URB2, URB3, URB4 from the URB class.
  * FRB5 is handle in this class.
  */
-public class FIFO extends ApplicationDelivery {
+public class FIFO {
     URB urb;
+    ApplicationLayer applicationLayer;
     private Map<Integer, PriorityQueue<Message>> pendingMessages = new HashMap<>();
     private Map<Integer, Integer> nextExpected = new HashMap<>();
     
 
     public FIFO(String outputFilePath, HostParams hostParams, List<Host> hosts) {
-        super(outputFilePath, false);
+        this.applicationLayer = new ApplicationLayer(outputFilePath, true);
         urb = new URB(hostParams, hosts, this);
     }
 
     public void FIFOBroadcast(Message m) {
-        String broadcastString = "b " + m.getContent() + "\n";
-        write(broadcastString);
-
+        applicationLayer.broadcast(m.getContent());
         urb.urbBroadcast(m);
     }
 
@@ -47,7 +46,7 @@ public class FIFO extends ApplicationDelivery {
      * @param m The message to deliver triggered by the URB class.
      */
     public void FIFODeliver(Message m) {
-        int initiatorId = m.getInitiatorId();
+        int initiatorId = m.getSignature();
     
         pendingMessages.putIfAbsent(initiatorId, new PriorityQueue<>((a, b) -> Integer.compare(Integer.parseInt(a.getContent()), Integer.parseInt(b.getContent()))));
         nextExpected.putIfAbsent(initiatorId, 1);
@@ -57,9 +56,12 @@ public class FIFO extends ApplicationDelivery {
     
         while (!queue.isEmpty() && Integer.parseInt(queue.peek().getContent()) == nextExpected.get(initiatorId)) {
             Message nextMessage = queue.poll();
-            String deliverString = "d " + nextMessage.getInitiatorId() + " " + nextMessage.getContent() + "\n";
-            write(deliverString);
+            applicationLayer.deliver(nextMessage.getSignature(), nextMessage.getContent());
             nextExpected.put(initiatorId, nextExpected.get(initiatorId) + 1);
         }
+    }
+
+    public void flushOutput() {
+        applicationLayer.flushOutput();
     }
 }
