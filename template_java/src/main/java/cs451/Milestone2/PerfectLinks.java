@@ -118,7 +118,6 @@ public class PerfectLinks extends Host {
                 Host receiver = firstPair.second();
                 Message[] messagesToSend = new Message[MAX_MESSAGES_PER_PACKET];
                 messagesToSend[0] = firstPair.first();
-                int nbTreated = 1;
                 // We assume this should not be greater than MAX_PAYLOAD_SIZE
                 int currentPayloadSizeBytes = Character.BYTES +  6 * Integer.BYTES + messagesToSend[0].getContent().getBytes(StandardCharsets.UTF_8).length;
 
@@ -138,23 +137,20 @@ public class PerfectLinks extends Host {
                 * [senderId (4 Bytes)] 
                 */
 
+                int addedMessages = 1;
 
-                for (int i = 1; i < MAX_MESSAGES_PER_PACKET; i++) {
-                    Pair<Message, Host> nextPair = messageQueue.peek();
-                    if (nextPair == null) break;
-                    
+                for (Pair<Message, Host> pair: messageQueue) {                    
                     // ContentSize(4), Content, Signature(4)
-                    int nextPayloadSizeBytes = 2 * Integer.BYTES + nextPair.first().getContent().getBytes(StandardCharsets.UTF_8).length;
-                    if (nextPair.second().id() != receiver.id() || (currentPayloadSizeBytes + nextPayloadSizeBytes) > MAX_PAYLOAD_SIZE){
-                        break;
-                    } 
+                    int nextPayloadSizeBytes = 2 * Integer.BYTES + pair.first().getContent().getBytes(StandardCharsets.UTF_8).length;
+                    if (pair.second().id() != receiver.id() || (currentPayloadSizeBytes + nextPayloadSizeBytes) > MAX_PAYLOAD_SIZE) continue;
+                    
 
-                    messageQueue.remove();
+                    messageQueue.remove(pair);
 
-                    messagesToSend[i] = nextPair.first();
+                    messagesToSend[addedMessages] = pair.first();
+                    if (++addedMessages == MAX_MESSAGES_PER_PACKET) break;
                     currentPayloadSizeBytes += nextPayloadSizeBytes;
-                    nbTreated++;
-                }                
+                }         
 
                 // Ensure window size
                 while (window.size() >= WINDOW_SIZE.get()) {
@@ -165,8 +161,7 @@ public class PerfectLinks extends Host {
 
                 // Assign sequence number and send the packet
                 int seqNum = nextSeqNum.getAndIncrement();
-                if (nbTreated > 1) System.out.println("NbTreated = " + nbTreated);
-                Packet packet = new Packet(seqNum, messagesToSend, nbTreated, receiver);
+                Packet packet = new Packet(seqNum, messagesToSend, addedMessages, receiver);
                 window.put(seqNum, packet);
                 sendPacket(packet, 0);
 
