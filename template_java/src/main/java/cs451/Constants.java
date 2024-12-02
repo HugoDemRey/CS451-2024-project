@@ -37,7 +37,8 @@ public class Constants {
     public static final int STANDARD_TIMEOUT = 750; // The initial timeout given to a packet in PerfectLinks. Given in milliseconds.
     
     /* URB */
-    public static final int MAX_PENDING_SIZE = 2000;      // Maximum number of pending messages before URB broadcasting again.
+    public static final int MAX_PENDING_SIZE = 6000;      // Maximum number of pending messages before URB broadcasting again.
+    public static final int MIN_PENDING_SIZE = 500;      // Minimum number of pending messages before URB broadcasting again.
     public static final int MAX_PENDING_SLEEP_TIME = 100; // The time to wait until rechecking the pending size in URB. Given in milliseconds
     
     public static final int PENDING_CHECK_INTERVAL = 500; // The interval between each pending queue processing in URB. Given in milliseconds

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly BASE_PATH="/home/dcl/Desktop/CS451-2024-project/template_java/"
+readonly BASE_PATH="/home/dcl/Projects/Distributed_Algorithms/GithubRepository/template_java/"
 readonly RUN_PATH="run.sh"
 readonly BUILD_PATH="build.sh"
 readonly TC_PATH="../tools/tc.py"
@@ -22,7 +22,7 @@ sleep 5
 # Run the network setup script
 echo ""
 echo "Running network setup script..."
-gnome-terminal -- bash -c "cd $BASE_PATH; python $TC_PATH; exec bash"
+gnome-terminal -- bash -c "cd $BASE_PATH; python3 $TC_PATH; exec bash"
 echo "Network setup script finished!"
 sleep 5
 
@@ -32,8 +32,6 @@ echo "Starting all processes..."
 gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 1 --hosts $HOSTS_PATH --output $OUTPUT_PATH/1.output $PERFECT_LINKS_PATH; exec bash"
 gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 2 --hosts $HOSTS_PATH --output $OUTPUT_PATH/2.output $PERFECT_LINKS_PATH; exec bash"
 gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 3 --hosts $HOSTS_PATH --output $OUTPUT_PATH/3.output $PERFECT_LINKS_PATH; exec bash"
-# gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 4 --hosts $HOSTS_PATH --output $OUTPUT_PATH/4.output $PERFECT_LINKS_PATH; exec bash"
-# gnome-terminal -- bash -c "cd $BASE_PATH; ./$RUN_PATH --id 5 --hosts $HOSTS_PATH --output $OUTPUT_PATH/5.output $PERFECT_LINKS_PATH; exec bash"
 echo "Started all processes!"
 
 echo ""

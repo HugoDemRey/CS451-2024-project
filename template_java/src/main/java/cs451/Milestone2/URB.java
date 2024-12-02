@@ -1,6 +1,7 @@
 package cs451.Milestone2;
 
 import static cs451.Constants.MAX_PENDING_SIZE;
+import static cs451.Constants.MIN_PENDING_SIZE;
 import static cs451.Constants.PENDING_CHECK_INTERVAL;
 
 import java.util.HashSet;
@@ -33,8 +34,9 @@ public class URB {
 
     Set<Message> delivered;
     ConcurrentLinkedQueue<Message> pending;
-
     ConcurrentHashMap<Message, Set<Integer>> acks; // <Message, Set<hostIds>>
+
+    private int CURRENT_MAX_PENDING_SIZE;
 
     PerfectLinks perfectLinks;
     FIFO fifo;
@@ -46,9 +48,16 @@ public class URB {
         perfectLinks = new PerfectLinks(hostParams, this);
     }
 
+    private int computeMaxPendingSize(int nbHosts){
+        return Math.max(MAX_PENDING_SIZE / (nbHosts-1), MIN_PENDING_SIZE);
+    }
 
     /* URB INIT */
     public void init() {
+
+        this.CURRENT_MAX_PENDING_SIZE = computeMaxPendingSize(hosts.size());
+        System.out.println("Max pending size: " + CURRENT_MAX_PENDING_SIZE);
+
         delivered = new HashSet<>();
         pending = new ConcurrentLinkedQueue<>();
         acks = new ConcurrentHashMap<>();
@@ -80,7 +89,7 @@ public class URB {
 
     public void urbBroadcast(Message m) {
 
-        broadcastSleep(MAX_PENDING_SIZE);
+        broadcastSleep(CURRENT_MAX_PENDING_SIZE);
 
         pending.add(m);
         acks.put(m, new HashSet<>(List.of(perfectLinks.id())));
