@@ -29,7 +29,7 @@ public class FIFO {
     
 
     public FIFO(String outputFilePath, HostParams hostParams, List<Host> hosts) {
-        this.applicationLayer = new ApplicationLayer(outputFilePath, true);
+        this.applicationLayer = new ApplicationLayer(outputFilePath, false);
         urb = new URB(hostParams, hosts, this);
     }
 
