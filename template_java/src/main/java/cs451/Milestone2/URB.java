@@ -105,12 +105,12 @@ public class URB {
     public void urbDeliver(Message m) {
         if (delivered.contains(m)) return;
         delivered.add(m);
+        acks.remove(m);
         fifo.FIFODeliver(m);
     }
 
-    int rebroadcasts = 0;
-
     public void bebDeliver(int lastSenderId, Message m) {
+        if (delivered.contains(m)) return;
         acks.putIfAbsent(m, new HashSet<>());
         Set<Integer> acksM = acks.get(m);
         boolean neverReceivedByLastSenderId = acksM.add(lastSenderId);

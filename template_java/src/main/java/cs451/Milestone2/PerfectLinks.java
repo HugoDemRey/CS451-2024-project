@@ -60,8 +60,6 @@ public class PerfectLinks extends Host {
         try {
             socket = new DatagramSocket(port());
 
-            // can go up to 8 threads, here we only use 2.
-
             executor.execute(() -> {
                 try {
                     processQueue();
@@ -236,16 +234,12 @@ public class PerfectLinks extends Host {
         long startTime = System.currentTimeMillis();
         computedRTTs.computeIfAbsent(packet.seqNum(), k -> new ArrayList<Long>());
         try {
-            computedRTTs.get(packet.seqNum()).add(startTime);
+            List<Long> rttList = computedRTTs.get(packet.seqNum());
+            if (rttList != null) rttList.add(startTime);
         } catch (NullPointerException e) {
             // can happen if we just removed the packet from the window
+            e.printStackTrace();
         }
-        // System.out.print("S | p" + parentHost.id() + " → p" + packet.receiver().id() + " : seq n." + packet.seqNum());
-        // System.out.print(" - Packet Content = [");
-        // for (int i = 0; i < packet.nbMessages(); i++) {
-        //     System.out.print(" " + packet.messages()[i] + " ");
-        // }
-        // System.out.print("]\n\n");
 
         socket.send(physicalPacket);
     }
@@ -277,16 +271,10 @@ public class PerfectLinks extends Host {
         Packet packet = window.get(ackSeqNum);
 
         if (packet != null && this.id() == originalSenderId && packet.receiver().id() == lastSenderId) {
-            
-            // for (int i = 0; i < packet.nbMessages(); i++) {
-            //     parentHost.debug("ACK " + initiatorHostId + " " + packet.messages()[i].getContent() + " seqNum: " + ackSeqNum + "\n");
-            // }
 
             // Update the RTT
             List<Long> rttList = computedRTTs.remove(ackSeqNum);;
             if (rttList != null) {
-                //write("seqNum : " + ackSeqNum + " packet n." + sentCount + " received.\n");
-                //write("RTT : " + (endTime - rttList.get(sentCount)) + " list = " + rttList + "\n");
                 long startTime = rttList.get(sentCount);
                 adaptTimeout(endTime - startTime);
             }
@@ -301,13 +289,6 @@ public class PerfectLinks extends Host {
             if (timer != null) {
                 timer.cancel(false);
             }
-            // System.out.print("\n✔ | p" + parentHost.id() + " ← p" + lastSenderId + " : seq n." + ackSeqNum);
-            // System.out.print(" - Packet Content = [");
-            // for (int i = 0; i < packet.nbMessages(); i++) {
-            //     System.out.print(" " + packet.messages()[i] + " ");
-            // }
-            // System.out.print("]\n\n");
-            
 
             synchronized (window) {
                 window.notifyAll();
@@ -326,9 +307,6 @@ public class PerfectLinks extends Host {
 
         long deviation = Math.abs(sampleRTT - smoothedRTT);
         TIMEOUT.set((int) (smoothedRTT + 4 * BETA * deviation));
-
-        //write("SampleRTT : " + sampleRTT + " | EstimatedRTT : " + estimatedRTT + " | Deviation : " + deviation + " | Timeout : " + TIMEOUT.get() + " | Window Size : " + WINDOW_SIZE.get() + "\n\n");
-
     }
     
     /**
@@ -359,9 +337,6 @@ public class PerfectLinks extends Host {
                 Packet packet = window.get(seqNum);
                 if (packet != null) {
                     sendPacket(packet, sentCount + 1);
-                    // for (int i = 0; i < packet.nbMessages(); i++) {
-                    //     parentHost.debug("s " + packet.messages()[i].getInitiatorId() + " " + packet.messages()[i].getContent() + " seqNum: " + seqNum + "\n");
-                    // }
                     startTimer(seqNum, sentCount + 1); // Restart the timer
                     // Adapt the sliding window
                     adaptSlidingWindow(false);
@@ -436,15 +411,10 @@ public class PerfectLinks extends Host {
         // Send individual ACK regardless of duplication
         sendAck(socket, packet.getAddress(), packet.getPort(), senderId, seqNb, sentCount);
 
-        //System.out.print("R | p" + parentHost.id() + " ← p" + lastSenderId + " : seq n." + seqNb);
-        //System.out.print(" - Packet Content = [");
         for (int i = 0; i < nbMessages; i++) {
             Message message = new Message(signatures[i], content[i]);
-            //System.out.print(" " + message + " ");
-            //parentHost.debug("r " + initiatorHostId + " " + content[i] + " seqNum: " + seqNb + "\n");
             urb.bebDeliver(senderId, message);
         }
-        //System.out.print("]\n\n");
                 
     }
 
