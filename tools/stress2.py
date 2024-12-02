@@ -232,6 +232,23 @@ def startProcesses(processes, runscript, hostsFilePath, configFilePaths, outputD
 
     return procs
 
+def count(parent_dir):
+
+    total_sum = 0
+
+    for root, _, files in os.walk(parent_dir):
+        number_of_d = len([file for file in files if file.endswith(".output")])
+
+
+        for file in files:
+            if file.endswith(".output"):
+                with open(os.path.join(root, file), 'r') as f:
+                    content = f.read()
+                    total_sum += content.count("d ")
+
+    return total_sum
+
+
 
 def main(parser_results):
     cmd = parser_results.command
@@ -300,6 +317,7 @@ def main(parser_results):
 
         print_progress_bar(100)
 
+        total_delivered = count("./stress_test_out/")
         receiverOutputPath = os.path.join(parser_results.logsDir, "proc01.output")
         with open(receiverOutputPath, "r") as receiverOutputFile:
             nbDeliveredMessages = len(receiverOutputFile.readlines())

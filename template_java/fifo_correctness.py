@@ -15,7 +15,7 @@ def parse_logs(output_dir):
     # Iterate over output files in the directory
     for filename in os.listdir(output_dir):
         if filename.endswith(".output"):
-            process_id = int(filename.split('.')[0])
+            process_id = int(filename.split('.')[0][-2:])
             file_path = os.path.join(output_dir, filename)
             
             with open(file_path, 'r') as f:
@@ -198,6 +198,7 @@ def little_j_2():
     time.sleep(3)
     print("\nGood Luck my friend! 🍀")
 
-check_correctness('./../example/output/')
+check_correctness('./../tools/stress_test_out/')
+#check_correctness('./../example/output/')
 
 

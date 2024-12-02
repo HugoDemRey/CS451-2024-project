@@ -11,18 +11,9 @@ public class OutputWriter {
     private final String outputFilePath;
     private final Object lock = new Object(); // Lock object for synchronization
 
-    private final BufferedWriter writer;
-
     public OutputWriter(String outputFilePath) {
         this.outputFilePath = outputFilePath;
         this.buffer = new StringBuilder();
-        try {
-            this.writer = Files.newBufferedWriter(Paths.get(outputFilePath), StandardOpenOption.APPEND);
-        } catch (IOException e) {
-            System.err.println("Error creating OutputWriter");
-            e.printStackTrace();
-            throw new RuntimeException("Error creating OutputWriter");
-        }
     }
 
     /**
@@ -44,12 +35,13 @@ public class OutputWriter {
      */
     public void addData(String data) {
 
-        try {
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath), StandardOpenOption.APPEND)) {
             writer.write(data);
+            writer.close();
         } catch (IOException e) {
             System.err.println("Error writing to file");
             e.printStackTrace();
-        }
+        } 
 
         // synchronized (lock) {
         //     try {
@@ -72,6 +64,7 @@ public class OutputWriter {
         synchronized (lock) {
             try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath + ".debug"), StandardOpenOption.APPEND)) {
                 writer.write(data);
+                writer.close();
             } catch (IOException e) {
                 System.err.println("Error writing to debug file");
                 e.printStackTrace();
@@ -102,7 +95,6 @@ public class OutputWriter {
      */
     public void close() throws IOException {
         flush();
-        writer.close();
     }
 
     /**
@@ -112,6 +104,7 @@ public class OutputWriter {
     private void writeToFile() throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath), StandardOpenOption.APPEND)) {
             writer.write(buffer.toString());
+            writer.close();
         }
         buffer.setLength(0);
     }
