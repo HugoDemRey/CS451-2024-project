@@ -34,17 +34,25 @@ public class OutputWriter {
      * Thread-safe implementation using synchronization
      */
     public void addData(String data) {
-        synchronized (lock) {
-            try {
-                buffer.append(data);
-                if (buffer.length() >= MAX_BUFFER_SIZE) {
-                    writeToFile();
-                }
-            } catch (IOException e) {
-                System.err.println("Error writing to file");
-                e.printStackTrace();
-            }
+
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(outputFilePath), StandardOpenOption.APPEND)) {
+            writer.write(data);
+        } catch (IOException e) {
+            System.err.println("Error writing to file");
+            e.printStackTrace();
         }
+
+        // synchronized (lock) {
+        //     try {
+        //         buffer.append(data);
+        //         if (buffer.length() >= MAX_BUFFER_SIZE) {
+        //             writeToFile();
+        //         }
+        //     } catch (IOException e) {
+        //         System.err.println("Error writing to file");
+        //         e.printStackTrace();
+        //     }
+        // }
     }
 
     /**
