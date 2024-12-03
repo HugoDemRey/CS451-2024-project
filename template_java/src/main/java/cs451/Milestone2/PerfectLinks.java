@@ -406,8 +406,6 @@ public class PerfectLinks extends Host {
         int senderId = buffer.getInt();
         
         
-
-        
         // Send individual ACK regardless of duplication
         sendAck(socket, packet.getAddress(), packet.getPort(), senderId, seqNb, sentCount);
 
