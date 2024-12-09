@@ -1,8 +1,8 @@
-package cs451.Milestone3.MessageTypes;
+package cs451.Milestone3.LatticeMessage;
 
 import java.util.Set;
 
-public class LatticeProposal extends LatticeMessage{
+public class LatticeProposal extends LatticeMessage {
     /**
      * LatticeProposal Format:
      * [P][proposalNumber]-[val1],[val2],...,[valn]

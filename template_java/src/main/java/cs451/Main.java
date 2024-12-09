@@ -1,6 +1,8 @@
 package cs451;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import cs451.Milestone1.Message;
 import cs451.Milestone1.Host.HostParams;
@@ -83,7 +85,7 @@ public class Main {
 
             // Initializing me as a sender or receiver
             if (hostId == myId) {
-                me = new Lattice();
+                me = new Lattice(new HostParams(hostId + "", host.ip(), host.port() + ""), hosts, parser.output());
             }
 
             System.out.println(host.id());
@@ -114,12 +116,9 @@ public class Main {
                 String line = br.readLine();
                 if (line != null) {
                     String[] parts = line.split(" ");
-                    System.out.print("Proposal " + i + ": ");
-                    for (int j = 0; j < parts.length; j++) {
-                        String content = parts[j];
-                        System.out.print(content + " ");
-                    }
-                    System.out.println();
+                    Set<Integer> proposal = new HashSet<>();
+                    for (int j = 0; j < parts.length; j++) proposal.add(Integer.parseInt(parts[j]));
+                    me.propose(proposal);
                 }
             }
         } catch (IOException e) {

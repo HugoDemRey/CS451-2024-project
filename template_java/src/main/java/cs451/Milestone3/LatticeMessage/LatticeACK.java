@@ -1,4 +1,4 @@
-package cs451.Milestone3.MessageTypes;
+package cs451.Milestone3.LatticeMessage;
 
 public class LatticeACK extends LatticeMessage {
     /**

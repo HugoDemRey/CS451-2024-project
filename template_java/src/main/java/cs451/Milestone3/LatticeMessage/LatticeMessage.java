@@ -1,4 +1,4 @@
-package cs451.Milestone3.MessageTypes;
+package cs451.Milestone3.LatticeMessage;
 
 import java.util.HashSet;
 import java.util.Set;
