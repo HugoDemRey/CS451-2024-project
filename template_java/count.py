@@ -27,4 +27,4 @@ def count(parent_dir):
         total_sum = [delivered_count[file] for file in delivered_count]
         print(sum(total_sum))
 
-    return total_sum
+        return total_sum

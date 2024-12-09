@@ -1,0 +1,363 @@
+My PID: 6607
+
+From a new terminal type `kill -SIGINT 6607` or `kill -SIGTERM 6607` to stop processing packets
+
+My ID: 1
+
+List of resolved hosts is:
+==========================
+1
+Checking pending messages: 0 messages
+Finished Checking Pending, treated 0 messages
+
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11001
+
+2
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11002
+
+3
+Human-readable IP: 127.0.0.1
+Human-readable Port: 11003
+
+
+Path to output:
+===============
+/home/dcl/Projects/Distributed_Algorithms/GithubRepository/stress_test_out/proc01.output
+
+Path to config:
+===============
+./../stress_test_out/config
+
+Doing some initialization
+
+me = cs451.Milestone2.FIFO@aec6354
+Broadcasting and delivering messages...
+
+Checking pending messages: 1782 messages
+Finished Checking Pending, treated 324 messages
+
+Checking pending messages: 1518 messages
+Finished Checking Pending, treated 149 messages
+
+Checking pending messages: 1677 messages
+Finished Checking Pending, treated 178 messages
+
+Checking pending messages: 1599 messages
+Finished Checking Pending, treated 167 messages
+
+Checking pending messages: 1542 messages
+Finished Checking Pending, treated 278 messages
+
+Checking pending messages: 1508 messages
+Finished Checking Pending, treated 369 messages
+
+Checking pending messages: 1162 messages
+Finished Checking Pending, treated 47 messages
+
+Checking pending messages: 1557 messages
+Finished Checking Pending, treated 108 messages
+
+Checking pending messages: 1781 messages
+Finished Checking Pending, treated 469 messages
+
+Checking pending messages: 1576 messages
+Finished Checking Pending, treated 389 messages
+
+Checking pending messages: 1576 messages
+Finished Checking Pending, treated 243 messages
+
+Checking pending messages: 1510 messages
+Finished Checking Pending, treated 52 messages
+
+Checking pending messages: 1526 messages
+Finished Checking Pending, treated 92 messages
+
+Checking pending messages: 1727 messages
+Finished Checking Pending, treated 363 messages
+
+Checking pending messages: 1614 messages
+Finished Checking Pending, treated 190 messages
+
+Checking pending messages: 1639 messages
+Finished Checking Pending, treated 178 messages
+
+Checking pending messages: 1620 messages
+Finished Checking Pending, treated 185 messages
+
+Checking pending messages: 1646 messages
+Finished Checking Pending, treated 211 messages
+
+Checking pending messages: 1657 messages
+Finished Checking Pending, treated 209 messages
+
+Checking pending messages: 1632 messages
+Finished Checking Pending, treated 193 messages
+
+Checking pending messages: 1612 messages
+Finished Checking Pending, treated 194 messages
+
+Checking pending messages: 1633 messages
+Finished Checking Pending, treated 201 messages
+
+Checking pending messages: 1621 messages
+Finished Checking Pending, treated 169 messages
+
+Checking pending messages: 1656 messages
+Finished Checking Pending, treated 206 messages
+
+Checking pending messages: 1640 messages
+Finished Checking Pending, treated 171 messages
+
+Checking pending messages: 1611 messages
+Finished Checking Pending, treated 177 messages
+
+Checking pending messages: 1633 messages
+Finished Checking Pending, treated 200 messages
+
+Checking pending messages: 1614 messages
+Finished Checking Pending, treated 189 messages
+
+Checking pending messages: 1652 messages
+Finished Checking Pending, treated 204 messages
+
+Checking pending messages: 1592 messages
+Finished Checking Pending, treated 158 messages
+
+Checking pending messages: 1623 messages
+Finished Checking Pending, treated 189 messages
+
+Checking pending messages: 1603 messages
+Finished Checking Pending, treated 160 messages
+
+Checking pending messages: 1601 messages
+Finished Checking Pending, treated 163 messages
+
+Checking pending messages: 1633 messages
+Finished Checking Pending, treated 215 messages
+
+Checking pending messages: 1588 messages
+Finished Checking Pending, treated 150 messages
+
+Checking pending messages: 1599 messages
+Finished Checking Pending, treated 168 messages
+
+Checking pending messages: 1599 messages
+Finished Checking Pending, treated 181 messages
+
+Checking pending messages: 1569 messages
+Finished Checking Pending, treated 146 messages
+
+Checking pending messages: 1607 messages
+Finished Checking Pending, treated 173 messages
+
+Checking pending messages: 1630 messages
+Finished Checking Pending, treated 207 messages
+
+Checking pending messages: 1579 messages
+Finished Checking Pending, treated 155 messages
+
+Checking pending messages: 1603 messages
+Finished Checking Pending, treated 176 messages
+
+Checking pending messages: 1576 messages
+Finished Checking Pending, treated 157 messages
+
+Checking pending messages: 1581 messages
+Finished Checking Pending, treated 143 messages
+
+Checking pending messages: 1605 messages
+Finished Checking Pending, treated 188 messages
+
+Checking pending messages: 1590 messages
+Finished Checking Pending, treated 168 messages
+
+Checking pending messages: 1578 messages
+Finished Checking Pending, treated 187 messages
+
+Checking pending messages: 1592 messages
+Finished Checking Pending, treated 167 messages
+
+Checking pending messages: 1585 messages
+Finished Checking Pending, treated 146 messages
+
+Checking pending messages: 1596 messages
+Finished Checking Pending, treated 169 messages
+
+Checking pending messages: 1602 messages
+Finished Checking Pending, treated 158 messages
+
+Checking pending messages: 1597 messages
+Finished Checking Pending, treated 149 messages
+
+Checking pending messages: 1616 messages
+Finished Checking Pending, treated 175 messages
+
+Checking pending messages: 1626 messages
+Finished Checking Pending, treated 191 messages
+
+Checking pending messages: 1595 messages
+Finished Checking Pending, treated 149 messages
+
+Checking pending messages: 1603 messages
+Finished Checking Pending, treated 156 messages
+
+Checking pending messages: 1583 messages
+Finished Checking Pending, treated 148 messages
+
+Checking pending messages: 1601 messages
+Finished Checking Pending, treated 175 messages
+
+Checking pending messages: 1595 messages
+Finished Checking Pending, treated 163 messages
+
+Checking pending messages: 1599 messages
+Finished Checking Pending, treated 160 messages
+
+Checking pending messages: 1611 messages
+Finished Checking Pending, treated 161 messages
+
+Checking pending messages: 1562 messages
+Finished Checking Pending, treated 137 messages
+
+Checking pending messages: 1586 messages
+Finished Checking Pending, treated 161 messages
+
+Checking pending messages: 1581 messages
+Finished Checking Pending, treated 161 messages
+
+Checking pending messages: 1600 messages
+Finished Checking Pending, treated 177 messages
+
+Checking pending messages: 1564 messages
+Finished Checking Pending, treated 151 messages
+
+Checking pending messages: 1558 messages
+Finished Checking Pending, treated 132 messages
+
+Checking pending messages: 1567 messages
+Finished Checking Pending, treated 140 messages
+
+Checking pending messages: 1608 messages
+Finished Checking Pending, treated 177 messages
+
+Checking pending messages: 1580 messages
+Finished Checking Pending, treated 149 messages
+
+Checking pending messages: 1585 messages
+Finished Checking Pending, treated 146 messages
+
+Checking pending messages: 1624 messages
+Finished Checking Pending, treated 187 messages
+
+Checking pending messages: 1603 messages
+Finished Checking Pending, treated 145 messages
+
+Checking pending messages: 1606 messages
+Finished Checking Pending, treated 172 messages
+
+Checking pending messages: 1595 messages
+Finished Checking Pending, treated 162 messages
+
+Checking pending messages: 1589 messages
+Finished Checking Pending, treated 150 messages
+
+Checking pending messages: 1608 messages
+Finished Checking Pending, treated 158 messages
+
+Immediately stopping network packet processing.
+Writing output.
+Flushing Buffer
+    Buffer Length: 623
+    Buffer Content:
+        b 6206
+        b 6207
+        b 6208
+        b 6209
+        b 6210
+        b 6211
+        b 6212
+        b 6213
+        b 6214
+        b 6215
+        b 6216
+        b 6217
+        b 6218
+        b 6219
+        b 6220
+        b 6221
+        b 6222
+        b 6223
+        b 6224
+        b 6225
+        b 6226
+        b 6227
+        b 6228
+        b 6229
+        b 6230
+        b 6231
+        b 6232
+        b 6233
+        b 6234
+        b 6235
+        b 6236
+        b 6237
+        b 6238
+        b 6239
+        b 6240
+        b 6241
+        b 6242
+        b 6243
+        b 6244
+        b 6245
+        b 6246
+        b 6247
+        b 6248
+        b 6249
+        b 6250
+        b 6251
+        b 6252
+        b 6253
+        b 6254
+        b 6255
+        b 6256
+        b 6257
+        b 6258
+        b 6259
+        b 6260
+        b 6261
+        b 6262
+        b 6263
+        b 6264
+        b 6265
+        b 6266
+        b 6267
+        b 6268
+        b 6269
+        b 6270
+        b 6271
+        b 6272
+        b 6273
+        b 6274
+        b 6275
+        b 6276
+        b 6277
+        b 6278
+        b 6279
+        b 6280
+        b 6281
+        b 6282
+        b 6283
+        b 6284
+        b 6285
+        b 6286
+        b 6287
+        b 6288
+        b 6289
+        b 6290
+        b 6291
+        b 6292
+        b 6293
+        b 6294
+Output Written.

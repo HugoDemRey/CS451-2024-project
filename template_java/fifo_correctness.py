@@ -198,7 +198,7 @@ def little_j_2():
     time.sleep(3)
     print("\nGood Luck my friend! 🍀")
 
-#check_correctness('./../tools/stress_test_out/')
+#check_correctness('./../stress_test_out/')
 check_correctness('./../example/output/')
 
 
