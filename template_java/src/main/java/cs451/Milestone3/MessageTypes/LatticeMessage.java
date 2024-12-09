@@ -1,10 +1,13 @@
 package cs451.Milestone3.MessageTypes;
 
-public abstract class LatticeMessageType {
+import java.util.HashSet;
+import java.util.Set;
+
+public abstract class LatticeMessage {
 
     private final int proposalNumber;
 
-    public LatticeMessageType(int proposalNumber) {
+    public LatticeMessage(int proposalNumber) {
         this.proposalNumber = proposalNumber;
     }
 
@@ -12,21 +15,13 @@ public abstract class LatticeMessageType {
         return proposalNumber;
     }
 
-    public static LatticeMessageType fromContent(String content) {
-        int dashIndex = input.indexOf('-');
-        if (dashIndex == -1) {
-            throw new IllegalArgumentException("Missing delimiter '-'");
-        }
-
-        // Extract proposal number
-        int proposalNumber = Integer.parseInt(input.substring(1, dashIndex));
-
+    public static Set<Integer> unpackValues(String content, int dashIndex) {
         // Parse values
-        List<Integer> values = new ArrayList<>();
+        Set<Integer> values = new HashSet<>();
         StringBuilder currentNumber = new StringBuilder();
         
-        for (int i = dashIndex + 1; i < input.length(); i++) {
-            char c = input.charAt(i);
+        for (int i = dashIndex + 1; i < content.length(); i++) {
+            char c = content.charAt(i);
             if (c == ',') {
                 if (currentNumber.length() > 0) {
                     values.add(Integer.parseInt(currentNumber.toString()));
@@ -42,10 +37,23 @@ public abstract class LatticeMessageType {
             values.add(Integer.parseInt(currentNumber.toString()));
         }
 
-        return new LatticeNACK(proposalNumber, values);
+        return values;
     }
+
+    public static LatticeMessage fromContent(String content) {
+
+        char messageType = content.charAt(0);
+
+        switch (messageType) {
+            case 'A': return LatticeACK.fromString(content);
+            case 'N': return LatticeNACK.fromString(content);
+            case 'P': return LatticeProposal.fromString(content);
+        }
+
         return null;
     }
+
+
     
 }
 

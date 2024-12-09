@@ -2,7 +2,7 @@ package cs451.Milestone3.MessageTypes;
 
 import java.util.Set;
 
-public class LatticeProposal extends LatticeMessageType{
+public class LatticeProposal extends LatticeMessage{
     /**
      * LatticeProposal Format:
      * [P][proposalNumber]-[val1],[val2],...,[valn]
@@ -18,8 +18,22 @@ public class LatticeProposal extends LatticeMessageType{
         this.values = values;
     }
 
+    public static LatticeProposal fromString(String content) {
+        int dashIndex = content.indexOf('-');
+        int proposalNumber = Integer.parseInt(content.substring(1, dashIndex));
+
+        Set<Integer> values = unpackValues(content, dashIndex);
+
+        return new LatticeProposal(proposalNumber, values);
+    }
+
     public Set<Integer> getValues() {
         return values;
+    }
+
+    @Override
+    public String toString() {
+        return "P" + proposalNumber() + "-" + values.toString().replace("[", "").replace("]", "").replace(" ", "");
     }
     
 }

@@ -2,7 +2,7 @@ package cs451.Milestone3.MessageTypes;
 
 import java.util.Set;
 
-public class LatticeNACK extends LatticeMessageType {
+public class LatticeNACK extends LatticeMessage {
     /**
      * LatticeNACK Format:
      * [N][proposalNumber]-[val1],[val2],...,[valn]
@@ -18,8 +18,23 @@ public class LatticeNACK extends LatticeMessageType {
         this.values = values;
     }
 
+    public static LatticeNACK fromString(String content) {
+        int dashIndex = content.indexOf('-');
+        int proposalNumber = Integer.parseInt(content.substring(1, dashIndex));
+
+        Set<Integer> values = unpackValues(content, dashIndex);
+
+        return new LatticeNACK(proposalNumber, values);
+    }
+
+
     public Set<Integer> getValues() {
         return values;
+    }
+
+    @Override
+    public String toString() {
+        return "N" + proposalNumber() + "-" + values.toString().replace("[", "").replace("]", "").replace(" ", "");
     }
     
 }

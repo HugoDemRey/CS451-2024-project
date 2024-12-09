@@ -5,15 +5,14 @@ import java.util.List;
 import cs451.Milestone1.Message;
 import cs451.Milestone1.Host.HostParams;
 import cs451.Milestone2.FIFO;
-import cs451.Milestone3.Lattice;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class Main {
+public class MainMilestone2 {
 
-    static Lattice me;
+    static FIFO me;
 
     private static void handleSignal() {
         //immediately stop network packet processing
@@ -54,24 +53,15 @@ public class Main {
 
         
         // Implement the logic here from config file
-        int proposalsNb = -1;
-        int maxValuesPerProposal = -1;
-        int maxDistinctValues = -1;
+        int nbMessagesPerSender = -1;
         int myId = parser.myId();
         // Read the configuration file to get nbMessagesPerSender
         try (BufferedReader br = new BufferedReader(new FileReader(parser.config()))) {
             String line = br.readLine();
-            if (line != null) {
-                String[] parts = line.split(" ");
-                proposalsNb = Integer.parseInt(parts[0]);
-                maxValuesPerProposal = Integer.parseInt(parts[1]);
-                maxDistinctValues = Integer.parseInt(parts[2]);
-            }
+            nbMessagesPerSender = Integer.parseInt(line);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        System.out.println("proposalsNb=" + proposalsNb + ", maxValuesPerProposal=" + maxValuesPerProposal + ", maxDistinctValues=" + maxDistinctValues);
 
         // We only keep a list of Hosts and not Senders or Receivers, our current host does not need to access functions, we just need data.
         
@@ -83,7 +73,7 @@ public class Main {
 
             // Initializing me as a sender or receiver
             if (hostId == myId) {
-                me = new Lattice();
+                me = new FIFO(parser.output(), new HostParams(host.id() + "", host.ip(), host.port() + ""), hosts);
             }
 
             System.out.println(host.id());
@@ -107,31 +97,11 @@ public class Main {
 
         System.out.println("Broadcasting and delivering messages...\n");
 
-
-        try (BufferedReader br = new BufferedReader(new FileReader(parser.config()))) {
-            br.readLine(); // skip first line
-            for (int i = 0; i < proposalsNb; i++) {
-                String line = br.readLine();
-                if (line != null) {
-                    String[] parts = line.split(" ");
-                    System.out.print("Proposal " + i + ": ");
-                    for (int j = 0; j < parts.length; j++) {
-                        String content = parts[j];
-                        System.out.print(content + " ");
-                    }
-                    System.out.println();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        
-
-        //for (int i = 0; i < nbMessagesPerSender; i++) {
-            //String content = (i+1) + "";
+        for (int i = 0; i < nbMessagesPerSender; i++) {
+            String content = (i+1) + "";
             // String content = java.util.UUID.randomUUID().toString().substring(0, 5); // should work with any string
-            // ((FIFO) me).FIFOBroadcast(new Message(myId, content));
-        //}
+            ((FIFO) me).FIFOBroadcast(new Message(myId, content));
+        }
 
         // After a process finishes broadcasting,
         // it waits forever for the delivery of messages.

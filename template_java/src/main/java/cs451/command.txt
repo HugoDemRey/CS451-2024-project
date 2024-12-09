@@ -10,5 +10,10 @@ Milestone 2
 ./run.sh --id 2 --hosts ./../example/hosts --output ./../example/output/2.output ./../example/configs/fifo-broadcast.config
 ./run.sh --id 3 --hosts ./../example/hosts --output ./../example/output/3.output ./../example/configs/fifo-broadcast.config
 
+Milestone 3
+./run.sh --id 1 --hosts ./../example/hosts --output ./../example/output/1.output ./../example/configs/lattice-agreement-1.config
+./run.sh --id 2 --hosts ./../example/hosts --output ./../example/output/2.output ./../example/configs/lattice-agreement-2.config
+./run.sh --id 3 --hosts ./../example/hosts --output ./../example/output/3.output ./../example/configs/lattice-agreement-3.config
+
 python3 stress.py perfect -r ./../template_java/run.sh -l ./../stress_test_out -p 3 -m 2147483647
 python3 stress2.py perfect -r ./../template_java/run.sh -l ./../stress_test_out -p 3 -m 2147483647
