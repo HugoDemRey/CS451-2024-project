@@ -42,6 +42,7 @@ public class Constants {
     public static final int MAX_PENDING_SLEEP_TIME = 100; // The time to wait until rechecking the pending size in URB. Given in milliseconds
     
     public static final int PENDING_CHECK_INTERVAL = 500; // The interval between each pending queue processing in URB. Given in milliseconds
+    public static final int DECISION_CHECK_INTERVAL = 500;
 
     /* OutputWriter */
     public static final int MAX_BUFFER_SIZE = 1000; // The maximum size of the buffer in OutputWriter before flushing to the file.

@@ -1,5 +1,7 @@
 package cs451.Milestone3;
 
+import static cs451.Constants.DECISION_CHECK_INTERVAL;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,7 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import cs451.Host;
 import cs451.Milestone1.Message;
 import cs451.Milestone1.Host.HostParams;
-import cs451.Milestone2.ApplicationLayer;
 import cs451.Milestone3.LatticeMessage.LatticeACK;
 import cs451.Milestone3.LatticeMessage.LatticeMessage;
 import cs451.Milestone3.LatticeMessage.LatticeNACK;
@@ -27,12 +28,29 @@ public class Lattice {
     private AtomicInteger nackCount = new AtomicInteger(0);
     private AtomicInteger activeProposalNumber = new AtomicInteger(0);
     private Set<Integer> proposedValues = new HashSet<>();
+    private Set<Integer> acceptedValues = new HashSet<>();
+    private final int f; // represents the half of the number of hosts
 
 
     public Lattice(HostParams hostParams, List<Host> hosts, String outputFilePath) {
         this.hosts = hosts;
+        this.f = hosts.size() / 2;
         perfectLinks = new PerfectLinks(hostParams, this);
         this.applicationLayer = new ApplicationLayer(outputFilePath, false);
+
+        // Start checking for pending messages
+        new Thread(() -> {
+            while (true) {
+                checkForReproposition();
+                checkForDecision();
+                try {
+                    Thread.sleep(DECISION_CHECK_INTERVAL);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
     }
 
     public void propose(Set<Integer> proposal) {
@@ -41,7 +59,7 @@ public class Lattice {
         ackCount.set(0);
         nackCount.set(0);
 
-        LatticeProposal latticeProposal = new LatticeProposal(activeProposalNumber.getAndIncrement(), proposal);
+        LatticeProposal latticeProposal = new LatticeProposal(activeProposalNumber.incrementAndGet(), proposal);
         Message m = new Message(perfectLinks.id(), latticeProposal.toString());
         System.out.println("Proposing " + latticeProposal.toString());
         bebBroadcast(m);
@@ -79,20 +97,54 @@ public class Lattice {
     }
 
     public void handleIncomingProposal(LatticeProposal proposal, int fromHostId) {
+
         System.out.println("Received proposal from " + fromHostId + " with proposal " + proposal.toString());
-        LatticeACK ack = new LatticeACK(proposal.proposalNumber());
-        Message m = new Message(perfectLinks.id(), ack.toString());
+        Message m;
+        if (proposal.getValues().containsAll(acceptedValues)) {
+            acceptedValues = proposal.getValues();
+            LatticeACK ack = new LatticeACK(proposal.proposalNumber());
+            m = new Message(perfectLinks.id(), ack.toString());
+            System.out.println("Sending A" + ack.proposalNumber());
+        } else {
+            acceptedValues.addAll(proposal.getValues());
+            LatticeNACK nack = new LatticeNACK(proposal.proposalNumber(), acceptedValues);
+            m = new Message(perfectLinks.id(), nack.toString());
+            System.out.println("Sending N" + nack.proposalNumber());
+        }
+
         bebSend(m, fromHostId);
     }
 
     public void handleIncomingAck(LatticeACK ack) {
-        System.out.println("Received A" + ack.proposalNumber());
+        System.out.println("Received A" + ack.proposalNumber() + " with activeProposalNumber: " + activeProposalNumber.get());
+        if (ack.proposalNumber() != activeProposalNumber.get()) return;
+
+        ackCount.incrementAndGet();
     }
 
     public void handleIncomingNack(LatticeNACK nack) {
-        System.out.println("Received N" + nack.proposalNumber());
+        System.out.println("Received N" + nack.proposalNumber() + " with activeProposalNumber: " + activeProposalNumber.get());
+        if (nack.proposalNumber() != activeProposalNumber.get()) return;
+
+        proposedValues.addAll(nack.getValues());
+        nackCount.incrementAndGet();
     }
 
+    private void checkForReproposition() {
+        if (!(nackCount.get() > 0) || !(ackCount.get() + nackCount.get() >= f+1) || !active.get()) return;
+        
+        System.out.println("Reproposing!");
+        propose(proposedValues);
+    }
+
+    private void checkForDecision() {
+        //System.out.println("Checking for decision, ackCount: " + ackCount.get() + " nackCount: " + nackCount.get() + " active: " + active.get());
+        if (!(ackCount.get() >= f+1) || !active.get()) return;
+
+        System.out.println("Deciding!");
+        active.set(false);
+        applicationLayer.decide(proposedValues);
+    }
 
     public void flushOutput() {
         applicationLayer.flushOutput();
