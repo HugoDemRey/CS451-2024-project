@@ -54,6 +54,20 @@ public class Lattice {
 
     }
 
+    int lastProposed = 0;
+    int lastDecided = 0;
+    private void printInfo(int p, int d) {
+        if (p == -1) {
+            lastDecided = d;
+            System.out.println("|| " + lastProposed + " | " + d + " ||");
+        } else if (d == -1) {
+            lastProposed = p;
+            System.out.println("|| " + p + " | " + lastDecided + " ||");
+        } else {
+            System.out.println("|| " + p + " | " + d + " ||");
+        }
+    }
+
     public void propose(int epoch, Set<Integer> proposal, boolean firstTime) {
 
         if (firstTime) {
@@ -64,6 +78,7 @@ public class Lattice {
                     e.printStackTrace();
                 }
             }
+            printInfo(epoch, -1);
         }
     
         latticeEpochs.putIfAbsent(epoch, new LatticeEpoch());
@@ -77,7 +92,6 @@ public class Lattice {
 
         LatticeProposal latticeProposal = new LatticeProposal(epoch, latticeEpoch.activeProposalNumber.incrementAndGet(), proposal);
         Message m = new Message(perfectLinks.id(), latticeProposal.toString());
-        System.out.println("Proposing P" + latticeProposal.epoch());
         bebBroadcast(m);
     }
 
@@ -113,9 +127,6 @@ public class Lattice {
     }
 
     public void handleIncomingProposal(LatticeProposal proposal, int fromHostId) {
-
-        //System.out.println("Received proposal from " + fromHostId + " with proposal " + proposal.toString());
-
         latticeEpochs.putIfAbsent(proposal.epoch(), new LatticeEpoch());
         LatticeEpoch latticeEpoch = latticeEpochs.get(proposal.epoch());
         Message m;
@@ -123,19 +134,16 @@ public class Lattice {
             latticeEpoch.acceptedValues = proposal.getValues();
             LatticeACK ack = new LatticeACK(proposal.epoch(), proposal.proposalNumber());
             m = new Message(perfectLinks.id(), ack.toString());
-            //System.out.println("Sending A" + ack.proposalNumber());
         } else {
             latticeEpoch.acceptedValues.addAll(proposal.getValues());
             LatticeNACK nack = new LatticeNACK(proposal.epoch(), proposal.proposalNumber(), latticeEpoch.acceptedValues);
             m = new Message(perfectLinks.id(), nack.toString());
-            //System.out.println("Sending N" + nack.proposalNumber());
         }
 
         bebSend(m, fromHostId);
     }
 
     public void handleIncomingAck(LatticeACK ack) {
-        //System.out.println("Received " + ack.toString());
         LatticeEpoch latticeEpoch = latticeEpochs.get(ack.epoch());
         if (ack.proposalNumber() != latticeEpoch.activeProposalNumber.get()) return;
 
@@ -143,7 +151,6 @@ public class Lattice {
     }
 
     public void handleIncomingNack(LatticeNACK nack) {
-        //System.out.println("Received " + nack.toString());
         LatticeEpoch latticeEpoch = latticeEpochs.get(nack.epoch());
         if (nack.proposalNumber() != latticeEpoch.activeProposalNumber.get()) return;
 
@@ -156,13 +163,11 @@ public class Lattice {
             LatticeEpoch latticeEpoch = latticeEpochs.get(epoch);
             if (!latticeEpoch.active.get() || !(latticeEpoch.nackCount.get() > 0) || !(latticeEpoch.ackCount.get() + latticeEpoch.nackCount.get() >= f+1)) continue;
             
-            //System.out.println("Reproposing for epoch " + epoch);
             propose(epoch, latticeEpoch.proposedValues, false);
         }
     }
 
     private void checkForDecision() {
-        //System.out.println("Checking for decision with toDecide size " + toDecide.size() + " and nextEpochToDecide " + nextEpochToDecide.get());
         for (int epoch : latticeEpochs.keySet()) {
             LatticeEpoch latticeEpoch = latticeEpochs.get(epoch);
             if (!latticeEpoch.active.get() || !(latticeEpoch.ackCount.get() >= f+1)) continue;
@@ -171,7 +176,7 @@ public class Lattice {
             currentActiveEpochs.decrementAndGet();
             latticeEpoch.active.set(false);
             if (nextEpochToDecide.compareAndSet(epoch, epoch + 1)) {
-                System.out.println("Deciding on epoch " + epoch);
+                printInfo(-1, epoch);
                 applicationLayer.decide(latticeEpoch.proposedValues);
             } else {
                 toDecide.put(epoch, latticeEpoch.proposedValues);
@@ -179,7 +184,7 @@ public class Lattice {
         }
 
         while (toDecide.containsKey(nextEpochToDecide.get())) {
-            System.out.println("Deciding on epoch " + nextEpochToDecide.get());
+            printInfo(-1, nextEpochToDecide.get());
             applicationLayer.decide(toDecide.get(nextEpochToDecide.get()));
             toDecide.remove(nextEpochToDecide.get());
             nextEpochToDecide.incrementAndGet();

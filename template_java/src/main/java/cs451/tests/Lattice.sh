@@ -17,7 +17,7 @@ readonly EXEC_TIME=60
 
 # Config gererator parameters
 readonly NB_PROCESSES=6 # Nb of processes
-readonly P=2000 # Nb of rounds
+readonly P=1000 # Nb of rounds
 readonly VS=15 # Max nb of values per process
 readonly DS=30 # Max nb of distinct values for all processes
 
@@ -26,21 +26,21 @@ echo ""
 echo "Building the application..."
 bash $BASE_PATH$BUILD_PATH
 echo "Build finished!"
-sleep 5
+sleep 1
 
 # Run the network setup script
 echo ""
 echo "Running network setup script..."
-gnome-terminal -- bash -c "cd $BASE_PATH; python $TC_PATH; exec bash"
+gnome-terminal -- bash -c "cd $BASE_PATH; python3 $TC_PATH; exec bash"
 echo "Network setup script finished!"
-sleep 5
+sleep 1
 
 # Generate the configuration files
 echo ""
 echo "Generating files..."
 python3 $CONFIG_GENERATOR $NB_PROCESSES $P $VS $DS $BASE_PATH$BASE_CONFIG_PATH $BASE_PATH$HOSTS_PATH $BASE_PATH$OUTPUT_PATH
 echo "files generated!"
-sleep 5
+sleep 1
 
 
 

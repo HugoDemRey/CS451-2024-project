@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class LatticeEpoch {
-    protected AtomicBoolean active = new AtomicBoolean(true);
+    protected AtomicBoolean active = new AtomicBoolean(false);
     protected AtomicInteger ackCount = new AtomicInteger(0);
     protected AtomicInteger nackCount = new AtomicInteger(0);
     protected AtomicInteger activeProposalNumber = new AtomicInteger(0);
