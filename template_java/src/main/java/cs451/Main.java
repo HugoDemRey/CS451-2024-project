@@ -119,6 +119,7 @@ public class Main {
                     Set<Integer> proposal = new HashSet<>();
                     for (int j = 0; j < parts.length; j++) proposal.add(Integer.parseInt(parts[j]));
                     me.propose(proposal);
+                    break; // TODO: remove this line, now it's just for single shot lattice agreement.
                 }
             }
         } catch (IOException e) {

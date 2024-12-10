@@ -7,8 +7,10 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +42,7 @@ public class PerfectLinks extends Host {
     private final Lattice lattice;
     private DatagramSocket socket;
     private final BlockingQueue<Pair<Message, Host>> messageQueue = new LinkedBlockingQueue<>();
+    private final Set<Message> delivered = new HashSet<>();
     private final ExecutorService executor = Executors.newFixedThreadPool(2); // One for sending, one for receiving
     private static AtomicInteger WINDOW_SIZE = new AtomicInteger(STANDARD_WINDOW_SIZE); // Example window size
     private static AtomicInteger TIMEOUT = new AtomicInteger(STANDARD_TIMEOUT); // Example timeout in milliseconds
@@ -372,6 +375,7 @@ public class PerfectLinks extends Host {
 
         for (int i = 0; i < nbMessages; i++) {
             Message message = new Message(signatures[i], content[i]);
+            if (!delivered.add(message)) continue; // PL2: No duplication
             lattice.bebDeliver(senderId, message);
         }
                 

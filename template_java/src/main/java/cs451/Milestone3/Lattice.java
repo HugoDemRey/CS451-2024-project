@@ -38,12 +38,12 @@ public class Lattice {
     public void propose(Set<Integer> proposal) {
         proposedValues = proposal;
         active.set(true);
-        activeProposalNumber.incrementAndGet();
         ackCount.set(0);
         nackCount.set(0);
 
-        LatticeProposal latticeProposal = new LatticeProposal(activeProposalNumber.get(), proposal);
+        LatticeProposal latticeProposal = new LatticeProposal(activeProposalNumber.getAndIncrement(), proposal);
         Message m = new Message(perfectLinks.id(), latticeProposal.toString());
+        System.out.println("Proposing " + latticeProposal.toString());
         bebBroadcast(m);
     }
 
@@ -61,14 +61,16 @@ public class Lattice {
         perfectLinks.enqueueMessage(m, host);
     }
 
-    public void bebDeliver(int lastSenderId, Message m) {
-
-        // TODO : Check that exactly these (lastSenderId, m) were not already delivered.
-        // I.e. Drop duplicates. 
-
+    /**
+     * This method is called by the perfect links layer when a message is received
+     * @param fromHostId The id of the host that sent the message
+     * @param m The message that was sent
+     * @implNote all messages passed to this function are never duplicates, the perfectlinks class handle this.
+     */
+    public void bebDeliver(int fromHostId, Message m) {
         LatticeMessage lm = LatticeMessage.fromContent(m.getContent());
         if (lm instanceof LatticeProposal) {
-            handleIncomingProposal((LatticeProposal) lm, lastSenderId);
+            handleIncomingProposal((LatticeProposal) lm, fromHostId);
         } else if (lm instanceof LatticeACK) {
             handleIncomingAck((LatticeACK) lm);
         } else if (lm instanceof LatticeNACK) {
@@ -76,11 +78,11 @@ public class Lattice {
         }
     }
 
-    public void handleIncomingProposal(LatticeProposal proposal, int lastSenderId) {
-        System.out.println("Received proposal from " + lastSenderId + " with proposal " + proposal.toString());
+    public void handleIncomingProposal(LatticeProposal proposal, int fromHostId) {
+        System.out.println("Received proposal from " + fromHostId + " with proposal " + proposal.toString());
         LatticeACK ack = new LatticeACK(proposal.proposalNumber());
         Message m = new Message(perfectLinks.id(), ack.toString());
-        bebSend(m, lastSenderId);
+        bebSend(m, fromHostId);
     }
 
     public void handleIncomingAck(LatticeACK ack) {
