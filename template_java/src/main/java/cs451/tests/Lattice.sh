@@ -1,15 +1,15 @@
 #!/bin/bash
 
-readonly BASE_PATH="/home/dcl/Desktop/CS451-2024-project/template_java/"
+readonly BASE_PATH="/home/dcl/Projects/Distributed_Algorithms/GithubRepository/template_java/"
 readonly RUN_PATH="run.sh"
 readonly BUILD_PATH="build.sh"
-readonly TC_PATH="../tools/tc.py"
+readonly TC_PATH="/home/dcl/Projects/Distributed_Algorithms/GithubRepository/tools/tc.py"
 readonly OUTPUT_PATH="../example/output/"
 readonly HOSTS_PATH="../example/hosts"
 readonly BASE_CONFIG_PATH="../example/configs/"
 readonly PREFIX_CONFIG_PATH="lattice-agreement-"
 readonly SUFFIX_CONFIG_PATH=".config"
-readonly CONFIG_GENERATOR="../example/configs/latice-config-generator.py"
+readonly CONFIG_GENERATOR="../example/configs/lattice-config-generator.py"
 readonly CORRECTNESS_PASS="src/main/java/cs451/tests/verify_correctness.py"
 readonly THROUGHPUT_PATH="src/main/java/cs451/tests/compute_throughput.py"
 
@@ -17,7 +17,7 @@ readonly EXEC_TIME=60
 
 # Config gererator parameters
 readonly NB_PROCESSES=6 # Nb of processes
-readonly P=100 # Nb of rounds
+readonly P=2000 # Nb of rounds
 readonly VS=15 # Max nb of values per process
 readonly DS=30 # Max nb of distinct values for all processes
 
@@ -71,7 +71,7 @@ sleep 1  # 10 seconds
 # Verify the correctness of the test
 echo ""
 echo "Verifying the correctness of the test..."
-python3 $BASE_PATH$CORRECTNESS_PASS LATICE $BASE_PATH$OUTPUT_PATH $BASE_PATH$BASE_CONFIG_PATH 
+python3 $BASE_PATH$CORRECTNESS_PASS LATTICE $BASE_PATH$OUTPUT_PATH $BASE_PATH$BASE_CONFIG_PATH 
 echo "Correctness verified!"
 
 # Compute the aggregate throughput by analyzing logs

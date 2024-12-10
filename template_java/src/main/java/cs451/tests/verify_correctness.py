@@ -386,7 +386,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: python verify_correctness.py FIFO <output_directory>")
         print("       python verify_correctness.py PL <output_directory>")
-        print("       python verify_correctness.py LATICE <output_directory> <config_directory>")
+        print("       python verify_correctness.py LATTICE <output_directory> <config_directory>")
         sys.exit(1)
 
     output_directory = sys.argv[2]
@@ -399,7 +399,7 @@ if __name__ == "__main__":
         verify_correctness_pl(output_directory)
     elif type == "FIFO":
         verify_correctness_fifo(output_directory)
-    elif type == "LATICE":
+    elif type == "LATTICE":
         verify_correctness_lattice(output_directory, sys.argv[3])
     else:
         print("Error: Invalid type. Choose either 'PL' or 'FIFO'.")

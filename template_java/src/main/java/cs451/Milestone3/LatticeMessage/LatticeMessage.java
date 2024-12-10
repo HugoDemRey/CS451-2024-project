@@ -5,14 +5,20 @@ import java.util.Set;
 
 public abstract class LatticeMessage {
 
+    private final int epoch;
     private final int proposalNumber;
 
-    public LatticeMessage(int proposalNumber) {
+    public LatticeMessage(int epoch, int proposalNumber) {
+        this.epoch = epoch;
         this.proposalNumber = proposalNumber;
     }
 
     public int proposalNumber() {
         return proposalNumber;
+    }
+
+    public int epoch() {
+        return epoch;
     }
 
     public static Set<Integer> unpackValues(String content, int dashIndex) {
