@@ -46,7 +46,7 @@ public class Constants {
     /* LATTICE AGREEMENT */
     public static final int DECISION_CHECK_INTERVAL = 500;
     public static final int CHECK_NEW_PROPOSITION_INTERVAL = 500;
-    public static final int MAX_EPOCH_SIMULTANEOUSLY = 100;
+    public static final int MAX_EPOCH_SIMULTANEOUSLY = 200;
 
     /* OutputWriter */
     public static final int MAX_BUFFER_SIZE = 1000; // The maximum size of the buffer in OutputWriter before flushing to the file.
