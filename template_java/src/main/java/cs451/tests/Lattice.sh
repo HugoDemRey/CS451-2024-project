@@ -17,7 +17,7 @@ readonly EXEC_TIME=60
 
 # Config gererator parameters
 readonly NB_PROCESSES=6 # Nb of processes
-readonly P=25000 # Nb of rounds
+readonly P=1000 # Nb of rounds
 readonly VS=50 # Max nb of values per process
 readonly DS=1000 # Max nb of distinct values for all processes
 
